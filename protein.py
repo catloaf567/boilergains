@@ -2,12 +2,11 @@ import math
 import itertools
 import json
 import difflib
+import pandas as pd
 from typing import Dict, Any, List, Tuple, Optional
 
-try:
-    import pandas as pd
-except Exception:  # pandas may not be installed in user's environment
-    pd = None  # type: ignore
+
+
 
 
 def _normalize_columns(df) -> Dict[str, str]:
@@ -328,6 +327,51 @@ def format_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]]) -> str:
     return '\n'.join(lines)
 
 
+def _progress_bar(value: float, target: float, width: int = 30) -> str:
+    if target <= 0:
+        return ''
+    frac = min(max(value / target, 0.0), 1.0)
+    filled = int(round(frac * width))
+    return '[' + '#' * filled + '-' * (width - filled) + f'] {value:.0f}/{target:.0f}'
+
+
+def pretty_print_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]], calorie_goal: float = 0, protein_goal: float = 0) -> None:
+    """Print the meal in a neat table with progress bars for calories and protein."""
+    if not meal:
+        print('No suitable meal found.')
+        return
+
+    items = meal['items']
+    # determine column widths
+    name_w = max((len(n) for n, _ in items), default=4)
+    qty_w = max((len(str(q)) for _, q in items), default=1)
+
+    print('\nSuggested meal:')
+    print(f"{'Qty':>{qty_w}}  {'Item':<{name_w}}  {'Serving':<12}  {'kcal':>6}  {'Protein(g)':>11}  {'Carbs(g)':>9}  {'Fiber(g)':>9}")
+    print('-' * (qty_w + name_w + 50))
+    for name, servings in items:
+        info = foods.get(name, {})
+        serving_desc = info.get('serving') or '1 serving'
+        c = info.get('calories', 0.0) * servings
+        p = info.get('protein', 0.0) * servings
+        carbs = info.get('carbs', 0.0) * servings
+        fiber = info.get('fiber', 0.0) * servings
+        print(f"{servings:>{qty_w}}  {name:<{name_w}}  {serving_desc:<12}  {c:6.0f}  {p:11.1f}  {carbs:9.1f}  {fiber:9.1f}")
+
+    total_cal = meal.get('total_calories', 0.0)
+    total_pro = meal.get('total_protein', 0.0)
+    total_carbs = meal.get('total_carbs', 0.0)
+    total_fiber = meal.get('total_fiber', 0.0)
+
+    print('\nTotals:')
+    print(f"  Calories: {total_cal:.0f} kcal   Protein: {total_pro:.1f} g   Carbs: {total_carbs:.1f} g   Fiber: {total_fiber:.1f} g")
+    if calorie_goal:
+        print('  Calorie progress: ' + _progress_bar(total_cal, calorie_goal))
+    if protein_goal:
+        print('  Protein progress: ' + _progress_bar(total_pro, protein_goal))
+
+
+
 def list_available_items(foods: Dict[str, Dict[str, Any]], vegan: bool = False, allergen: Optional[str] = None) -> List[str]:
     """Return a sorted list of available food item names after applying vegan/allergen filters."""
     candidates = _filter_candidates(foods, vegan, allergen)
@@ -413,13 +457,12 @@ def main():
 
     # Present alternatives if available
     alts = meal.get('alternatives', []) if isinstance(meal, dict) else []
-    print('\nSuggested meal (best match):')
-    print(format_meal(meal, foods))
+    pretty_print_meal(meal, foods, calorie_goal=cal_goal, protein_goal=pro_goal)
     if alts:
         print('\nOther close options:')
         for i, a in enumerate(alts, 1):
             print(f'\nOption {i}:')
-            print(format_meal(a, foods))
+            pretty_print_meal(a, foods, calorie_goal=cal_goal, protein_goal=pro_goal)
         pick = input('\nEnter option number to accept (or press Enter to keep best): ').strip()
         if pick:
             try:
