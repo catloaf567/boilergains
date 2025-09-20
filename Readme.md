@@ -32,6 +32,8 @@
 
 ## What's next for Protein-Cult
 
+Can add allergen specific to make it accessible for students with allergies
+
 
 
 

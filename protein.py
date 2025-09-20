@@ -124,22 +124,40 @@ def sort_by_fat(foods: Dict[str, Dict[str, Any]]) -> List[Tuple[str, float]]:
     return sorted(((name, info.get('fat', 0.0)) for name, info in foods.items()), key=lambda x: x[1], reverse=True)
 
 
-def _filter_candidates(foods: Dict[str, Dict[str, Any]], vegan: bool, allergen: Optional[str]) -> List[Tuple[str, Dict[str, Any]]]:
+def _filter_candidates(foods: Dict[str, Dict[str, Any]], vegan: bool, allergen: Optional[str], excluded_meats: Optional[List[str]] = None) -> List[Tuple[str, Dict[str, Any]]]:
+    """Filter candidate foods by vegan/allergen/explicit meat exclusions.
+
+    excluded_meats: optional list of lowercase meat tokens to exclude (e.g., ['beef', 'pork']).
+    If a food's name or allergens mention any excluded meat, it will be filtered out.
+    """
     allergen = (allergen or '').strip().lower() if allergen else ''
+    excluded_meats = [m.lower() for m in (excluded_meats or [])]
     result = []
     for name, info in foods.items():
+        lname = name.lower()
         if vegan and not info.get('vegan', False):
             continue
         if allergen:
             a = str(info.get('allergens', '')).lower()
             if allergen in a:
                 continue
+        # meat exclusions: check name and allergens for tokens
+        skip = False
+        if excluded_meats:
+            a = str(info.get('allergens', '')).lower()
+            for m in excluded_meats:
+                if m in lname or m in a:
+                    skip = True
+                    break
+        if skip:
+            continue
         result.append((name, info))
     return result
 
 
 def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_goal: float,
                  vegan: bool = False, allergen: Optional[str] = None,
+                 excluded_meats: Optional[List[str]] = None,
                  tolerance: float = 0.07, max_items: int = 3, max_servings: int = 3,
                  top_k: int = 30) -> Optional[Dict[str, Any]]:
     """Suggest a meal (combination of items and integer servings) that meets calorie and protein goals.
@@ -150,7 +168,7 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
     - Greedy/brute-force search over small combinations of items and integer servings
     - Return best match minimizing normalized distance to both goals
     """
-    candidates = _filter_candidates(foods, vegan, allergen)
+    candidates = _filter_candidates(foods, vegan, allergen, excluded_meats=excluded_meats)
     if not candidates:
         return None
 
@@ -383,10 +401,12 @@ def list_available_items(foods: Dict[str, Dict[str, Any]], vegan: bool = False, 
 
 
 def suggest_from_shortlist(foods: Dict[str, Dict[str, Any]], shortlist: List[str], calorie_goal: float, protein_goal: float,
+                           excluded_meats: Optional[List[str]] = None,
                            tolerance: float = 0.07, max_items: int = 3, max_servings: int = 3) -> Optional[Dict[str, Any]]:
     """Similar to suggest_meal but restricts candidate set to the provided shortlist of names."""
     subfoods = {n: foods[n] for n in shortlist if n in foods}
     return suggest_meal(subfoods, calorie_goal, protein_goal, vegan=False, allergen=None,
+                        excluded_meats=excluded_meats,
                         tolerance=tolerance, max_items=max_items, max_servings=max_servings, top_k=len(subfoods))
 
 
@@ -402,7 +422,18 @@ def _safe_float_input(prompt: str) -> float:
 def main():
     import os
     print('Meal suggestion assistant')
-    path = input('Path to Excel dataset (press Enter for Windsor-20250922.xlsx): ').strip() or 'Windsor-20250922.xlsx'
+    # Offer the user a choice of dining court datasets to keep the interface common
+    print('\nSelect dining court dataset:')
+    print('  1) Windsor (Windsor-20250922.xlsx)')
+    print('  2) Hillenbrand (Hillenbrand-Lunch20250922.xlsx)')
+    print("  3) Custom path")
+    choice = input('Choose 1/2/3 (press Enter for 1): ').strip() or '1'
+    if choice == '2':
+        path = 'Hillenbrand-Lunch20250922.xlsx'
+    elif choice == '3':
+        path = input('Path to Excel dataset: ').strip()
+    else:
+        path = 'Windsor-20250922.xlsx'
     pairings_path = input('Path to pairing JSON (press Enter for pairings.json in repo): ').strip() or 'pairings.json'
     if not os.path.exists(path):
         print(f"File not found: {path}")
@@ -430,6 +461,11 @@ def main():
     veg = input('Are you vegan? (y/n): ').strip().lower() in ('y', 'yes')
     allergen = input('Allergen to avoid (leave blank if none): ').strip()
 
+    # meat exclusion: allow user to exclude common meats (beef, chicken, pork, ham)
+    print('\nDo you want to exclude any meats? You can enter multiple separated by comma (options: beef, chicken, pork, ham).')
+    meats_in = input('Enter meat(s) to exclude (or press Enter for none): ').strip()
+    excluded_meats = [m.strip().lower() for m in meats_in.split(',') if m.strip()] if meats_in else []
+
     use_shortlist = input('Would you like to shortlist items to choose from first? (y/n): ').strip().lower() in ('y', 'yes')
     chosen_shortlist: Optional[List[str]] = None
     if use_shortlist:
@@ -447,9 +483,9 @@ def main():
             chosen_shortlist = names
 
     if chosen_shortlist:
-        meal = suggest_from_shortlist(foods, chosen_shortlist, cal_goal, pro_goal)
+        meal = suggest_from_shortlist(foods, chosen_shortlist, cal_goal, pro_goal, excluded_meats=excluded_meats)
     else:
-        meal = suggest_meal(foods, cal_goal, pro_goal, vegan=veg, allergen=allergen or None)
+        meal = suggest_meal(foods, cal_goal, pro_goal, vegan=veg, allergen=allergen or None, excluded_meats=excluded_meats)
 
     if not meal:
         print('\nNo matching meal found.')
