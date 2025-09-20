@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Protein Cult</title>
+    <!-- link corrected to existing file -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>The Protein Cult</h1>
+        <p>A meal suggestion tool for Purdue</p>
+    </header>
+    <main>
+        <section>
+            <h2>Meal suggestion</h2>
+            <p>Provide your meal goals and click on "suggest meal"</p>
+
+            <form id="suggestForm">
+                <p class="note">Using meals from <strong>Windsor Dining Court (Updated 9/20/25)</strong></p>
+
+                <label>Calorie goal (kcal):
+                    <input type="number" id="calorie" name="calorie" value="2000" required>
+                </label>
+
+                <label>Protein goal (g):
+                    <input type="number" id="protein" name="protein" value="70" required>
+                </label>
+
+                <label>Vegan:
+                    <select id="vegan" name="vegan">
+                        <option value="false" selected>No</option>
+                        <option value="true">Yes</option>
+                    </select>
+                </label>
+
+                <label>Allergen to avoid:
+                    <input type="text" id="allergen" name="allergen" placeholder="e.g., soy">
+                </label>
+
+                <button type="submit">Suggest meal</button>
+            </form>
+
+            <pre id="result" class="result">Results will appear here.</pre>
+        </section>
+    </main>
+    <script src="main.js"></script>
+</body>
+</html>
