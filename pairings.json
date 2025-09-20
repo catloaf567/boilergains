@@ -1,0 +1,20 @@
+{
+  "hamburger": ["bun", "bread", "roll", "fries"],
+  "burger": ["bun", "bread", "roll", "fries"],
+  "hot dog": ["bun", "ketchup", "mustard"],
+  "taco": ["shell", "tortilla", "salsa"],
+  "chicken": ["rice", "salad", "wrap", "bread"],
+  "steak": ["potato", "rice", "salad"],
+  "yogurt": ["granola", "berries", "fruit"],
+  "granola": ["yogurt", "milk", "berries"],
+  "oatmeal": ["milk", "berries", "banana"],
+  "pancake": ["syrup", "butter"],
+  "eggs": ["toast", "bacon", "sausage"],
+  "bacon": ["eggs", "toast"],
+  "salad": ["dressing", "bread", "chicken", "tofu"],
+  "rice": ["chicken", "beans", "tofu"],
+  "beans": ["rice", "tortilla"],
+  "pizza": ["bread", "cheese"],
+  "sushi": ["soy", "wasabi", "ginger"],
+  "bagel": ["cream cheese", "lox", "butter"]
+}
