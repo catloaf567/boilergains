@@ -18,7 +18,18 @@
             <p>Provide your meal goals and click on "suggest meal"</p>
 
             <form id="suggestForm">
-                <p class="note">Using meals from <strong>Windsor Dining Court (Updated 9/20/25)</strong></p>
+                <p class="note">Choose dining court dataset (defaults to Windsor)</p>
+
+                <label>Dining court dataset:
+                    <select id="dataset" name="dataset">
+                        <option value="windsor" selected>Windsor (Windsor-20250922.xlsx)</option>
+                        <option value="hillenbrand">Hillenbrand (Hillenbrand-Lunch20250922.xlsx)</option>
+                        <option value="custom">Custom path</option>
+                    </select>
+                </label>
+                <label id="customPathLabel" style="display:none">Custom dataset path:
+                    <input type="text" id="customPath" name="customPath" placeholder="e.g. data/myfile.xlsx">
+                </label>
 
                 <label>Calorie goal (kcal):
                     <input type="number" id="calorie" name="calorie" value="2000" required>
@@ -38,6 +49,14 @@
                 <label>Allergen to avoid:
                     <input type="text" id="allergen" name="allergen" placeholder="e.g., soy">
                 </label>
+
+                <fieldset>
+                    <legend>Exclude meats (optional)</legend>
+                    <label><input type="checkbox" name="exclude_meat" value="beef"> Beef</label>
+                    <label><input type="checkbox" name="exclude_meat" value="chicken"> Chicken</label>
+                    <label><input type="checkbox" name="exclude_meat" value="pork"> Pork</label>
+                    <label><input type="checkbox" name="exclude_meat" value="ham"> Ham</label>
+                </fieldset>
 
                 <button type="submit">Suggest meal</button>
             </form>
