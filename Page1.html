@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>The Protein Cult</title>
+        <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Playfair Display", Times, serif;
+            background-image: url(black_bg.jpg);
+            background-repeat: no-repeat;
+            background-size: cover; /* Makes the image cover the entire background */
+            background-attachment: fixed; /* Keeps the background fixed when scrolling */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .giant-button {
+            background-color: #fef9df;
+            color: black;
+            font-size: 100px;
+            font-family: "Playfair Display", Times, serif;
+            font-weight: bold;
+            padding: 75px 100px;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        .giant-button:hover {
+            background-color: #fef9df;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(205, 29, 60, 1);
+        }
+
+        .giant-button:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 40px;
+                margin-bottom: 30px;
+            }
+            
+            .giant-button {
+                font-size: 30px;
+                padding: 25px 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="giant-button"><a href="Page2.html">boiler <i>gains</i></a></button>
+</body>
+</html>
