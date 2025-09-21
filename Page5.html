@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>boiler gains - Input Your Own Values!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background-image: url(black_bg.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #fef9df;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .main-container {
+            max-width: 600px;
+            margin: 0 auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #fef9df;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .input-form {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .input-group {
+            margin-bottom: 30px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-label {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fef9df;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: #fef9df;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-family: "Times New Roman", Times, serif;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .input-field::placeholder {
+            color: rgba(254, 249, 223, 0.6);
+        }
+
+        .input-field:focus {
+            outline: none;
+            background-color: rgba(254, 249, 223, 0.2);
+            border-color: rgba(254, 249, 223, 0.5);
+            box-shadow: 0 0 10px rgba(254, 249, 223, 0.3);
+        }
+
+        .input-field:hover {
+            background-color: rgba(254, 249, 223, 0.15);
+            border-color: rgba(254, 249, 223, 0.4);
+        }
+
+        .unit-text {
+            font-size: 14px;
+            color: rgba(254, 249, 223, 0.8);
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .back-button {
+            background-color: rgba(205, 29, 60, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(205, 29, 60, 0.6);
+            color: #fef9df;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-family: "Times New Roman", Times, serif;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 40px auto 0;
+            display: block;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-button:hover {
+            background-color: rgba(205, 29, 60, 1);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(205, 29, 60, 0.4);
+            border-color: rgba(205, 29, 60, 0.8);
+        }
+
+        .back-button:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 36px;
+                margin-bottom: 40px;
+            }
+            
+            .input-form {
+                padding: 30px 20px;
+            }
+            
+            .input-label {
+                font-size: 18px;
+            }
+            
+            .input-field {
+                font-size: 16px;
+                padding: 12px 15px;
+            }
+            
+            .back-button {
+                font-size: 16px;
+                padding: 12px 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                max-width: 100%;
+            }
+            
+            .input-form {
+                padding: 25px 15px;
+            }
+            
+            .title {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1 class="title">Input Your Own Values!</h1>
+        
+        <div class="input-form">
+            <div class="input-group">
+                <label for="calories" class="input-label">Calories</label>
+                <input type="number" id="calories" class="input-field" placeholder="Enter calories" min="0" step="1">
+                <div class="unit-text">in kcal</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="protein" class="input-label">Protein</label>
+                <input type="number" id="protein" class="input-field" placeholder="Enter protein amount" min="0" step="0.1">
+                <div class="unit-text">in grams</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="carbohydrates" class="input-label">Carbohydrates</label>
+                <input type="number" id="carbohydrates" class="input-field" placeholder="Enter carbohydrates amount" min="0" step="0.1">
+                <div class="unit-text">in grams</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="fats" class="input-label">Fats</label>
+                <input type="number" id="fats" class="input-field" placeholder="Enter fats amount" min="0" step="0.1">
+                <div class="unit-text">in grams</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="fiber" class="input-label">Fiber</label>
+                <input type="number" id="fiber" class="input-field" placeholder="Enter fiber amount" min="0" step="0.1">
+                <div class="unit-text">in grams</div>
+            </div>
+        </div>
+        
+        <button class="back-button" onclick="goBackToRecommended()">
+            Back to the Recommended Values
+        </button>
+    </div>
+
+    <script>
+        function goBackToRecommended() {
+            console.log('Going back to recommended values');
+            // Add your navigation logic here
+            // Example: window.location.href = 'recommended.html';
+            alert('Navigating back to recommended values...');
+        }
+    </script>
+</body>
+</html>

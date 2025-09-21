@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>boiler gains - Your Recommendations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background-image: url(black_bg.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            padding: 20px 10px;
+            color: #fef9df;
+        }
+        .bottom-input-section {
+            text-align: center;
+            margin-top: 50px;
+            width: 100%;
+        }
+
+        .main-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .title {
+            font-size: 42px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fef9df;
+        }
+
+        .subtitle {
+            font-size: 25px;
+            text-align: center;
+            margin-bottom: 40px;
+            color: #cd1d3c;
+            font-style: italic;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .nutrition-card {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            color: #fef9df;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .nutrition-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .nutrition-label {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nutrition-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .nutrition-unit {
+            font-size: 16px;
+            opacity: 0.8;
+            margin-bottom: 15px;
+        }
+
+        .nutrition-description {
+            font-size: 14px;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+
+        .custom-input-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .calories-display {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .calories-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #fef9df;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .or-text {
+            font-size: 20px;
+            color: #cd1d3c;
+            margin-bottom: 20px;
+        }
+
+        .custom-btn {
+            background-color: #fef9df;
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-family: "Times New Roman", Times, serif;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .custom-btn:hover {
+            background-color: #fef9df;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(205, 29, 60, 0.5);
+        }
+
+        .custom-btn:active {
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 32px;
+            }
+            
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .nutrition-card {
+                padding: 25px;
+            }
+            
+            .nutrition-value {
+                font-size: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1 class="title">Your Recommended Daily Nutrition</h1>
+        <p class="subtitle">Based on your profile, here are your personalized nutrition targets</p>
+        
+        <div class="calories-display">
+            <div class="calories-text">Total Calories: 2,200 kcal per day</div>
+        </div>
+
+        <div class="custom-input-section">
+            <button class="custom-btn" onclick="handleCustomInput()"><a href="Page4.html">Proceed</a></button>
+        </div>
+
+        
+        <div class="recommendations-grid">
+            <div class="nutrition-card">
+                <div class="nutrition-label">Protein</div>
+                <div class="nutrition-value">110</div>
+                <div class="nutrition-unit">grams per day</div>
+                <div class="nutrition-description">Essential for muscle maintenance and growth, approximately 0.8-1g per lb body weight</div>
+            </div>
+
+            <div class="nutrition-card">
+                <div class="nutrition-label">Fats</div>
+                <div class="nutrition-value">73</div>
+                <div class="nutrition-unit">grams per day</div>
+                <div class="nutrition-description">Healthy fats for hormone production and nutrient absorption (30% of calories)</div>
+            </div>
+
+            <div class="nutrition-card">
+                <div class="nutrition-label">Carbohydrates</div>
+                <div class="nutrition-value">248</div>
+                <div class="nutrition-unit">grams per day</div>
+                <div class="nutrition-description">Primary energy source for brain and muscles (45% of calories)</div>
+            </div>
+
+            <div class="nutrition-card">
+                <div class="nutrition-label">Fiber</div>
+                <div class="nutrition-value">28</div>
+                <div class="nutrition-unit">grams per day</div>
+                <div class="nutrition-description">Supports digestive health and helps maintain stable blood sugar levels</div>
+            </div>
+
+  
+
+        </div>
+
+        <div class="custom-input-section">
+            <div class="or-text">Don't like these recommendations?</div>
+            <button class="custom-btn" onclick="handleCustomInput()"><a href="Page5.html">Input Your Own!</a></button>
+        </div>
+    </div>
+
+    <script>
+        function handleCustomInput() {
+            console.log('Custom input button clicked');
+            // Add your navigation logic here
+            // Example: window.location.href = 'custom-input.html';
+        }
+
+    
+        // You could add logic here to calculate recommendations based on user data
+        // For now, showing example values
+        console.log('Nutrition recommendations page loaded');
+    </script>
+</body>
+</html>

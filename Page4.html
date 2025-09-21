@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>boiler gains - Pick Your Dining Hall</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Times New Roman", Times, serif;
+            background-image: url(black_bg.jpg);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #fef9df;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #fef9df;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .dining-halls-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 0 auto;
+        }
+
+        .dining-hall-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fef9df;
+            width: 180px;
+            height: 180px;
+            font-size: 16px;
+            font-family: "Times New Roman", Times, serif;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dining-hall-btn .image-placeholder {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: rgba(254, 249, 223, 0.7);
+            overflow: hidden;
+        }
+
+        .dining-hall-btn .image-placeholder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .dining-hall-btn .hall-name {
+            font-size: 14px;
+            line-height: 1.2;
+            text-align: center;
+        }
+
+        .dining-hall-btn:hover {
+            background-color: rgba(254, 249, 223, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(254, 249, 223, 0.2);
+            border-color: rgba(254, 249, 223, 0.4);
+        }
+
+        .dining-hall-btn:active {
+            transform: translateY(0);
+        }
+
+        .dietary-options {
+            max-width: 800px;
+            margin: 40px auto 0;
+            padding: 0 20px;
+        }
+
+        .vegan-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .dietary-label {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fef9df;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .vegan-dropdown {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #fef9df;
+            padding: 8px 15px;
+            font-size: 16px;
+            font-family: "Times New Roman", Times, serif;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .vegan-dropdown:hover {
+            background-color: rgba(254, 249, 223, 0.2);
+            border-color: rgba(254, 249, 223, 0.4);
+        }
+
+        .vegan-dropdown option {
+            background-color: #2a2a2a;
+            color: #fef9df;
+        }
+
+        .exclude-section {
+            text-align: center;
+        }
+
+        .exclude-section .dietary-label {
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .checkbox-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 0 auto;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-item:hover {
+            background-color: rgba(254, 249, 223, 0.1);
+            border-color: rgba(254, 249, 223, 0.3);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #cd1d3c;
+            cursor: pointer;
+        }
+
+        .checkbox-text {
+            color: #fef9df;
+            font-size: 14px;
+            font-family: "Times New Roman", Times, serif;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .bottom-info {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px 0;
+        }
+
+        .date-info {
+            font-size: 22px;
+            font-weight: bold;
+            color: #cd1d3c;
+            margin-bottom: 10px;
+        }
+
+        .meal-info {
+            font-size: 22px;
+            font-weight: bold;
+            color: #cd1d3c;
+        }
+
+        @media (max-width: 1024px) {
+            .dining-halls-container {
+                gap: 15px;
+            }
+            
+            .dining-hall-btn {
+                width: 160px;
+                height: 160px;
+                font-size: 14px;
+            }
+            
+            .dining-hall-btn .image-placeholder {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 12px;
+            }
+            
+            .dining-hall-btn .hall-name {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 36px;
+                margin-bottom: 40px;
+            }
+            
+            .dining-halls-container {
+                gap: 10px;
+            }
+            
+            .dining-hall-btn {
+                width: 140px;
+                height: 140px;
+                font-size: 12px;
+            }
+            
+            .dining-hall-btn .image-placeholder {
+                width: 60px;
+                height: 60px;
+                margin-bottom: 10px;
+            }
+            
+            .dining-hall-btn .hall-name {
+                font-size: 11px;
+            }
+            
+            .dietary-options {
+                padding: 0 10px;
+            }
+            
+            .dietary-label {
+                font-size: 18px;
+            }
+            
+            .vegan-dropdown {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+            
+            .checkbox-grid {
+                gap: 10px;
+            }
+            
+            .checkbox-text {
+                font-size: 13px;
+            }
+            
+            .date-info, .meal-info {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dining-halls-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .dining-hall-btn {
+                width: 160px;
+                height: 160px;
+                font-size: 14px;
+            }
+            
+            .dining-hall-btn .image-placeholder {
+                width: 70px;
+                height: 70px;
+                margin-bottom: 12px;
+            }
+            
+            .dining-hall-btn .hall-name {
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1 class="title">Pick Your Dining Hall</h1>
+        
+        <div class="dining-halls-container">
+            <button class="dining-hall-btn" onclick="selectDiningHall('windsor')">
+                <div class="image-placeholder">
+                    <img src="windsor.jpg">
+                </div>
+
+                <div class="hall-name">Windsor<br>Dining Court</div>
+            </button>
+            
+            <button class="dining-hall-btn" onclick="selectDiningHall('wiley')">
+                <div class="image-placeholder">
+                    <img src="wiley.jpg">
+                </div>
+                <div class="hall-name">Wiley<br>Dining Court</div>
+            </button>
+            
+            <button class="dining-hall-btn" onclick="selectDiningHall('ford')">
+                <div class="image-placeholder">
+                    <img src="ford.jpg">
+                </div>
+                <div class="hall-name">Ford<br>Dining Court</div>
+            </button>
+            
+            <button class="dining-hall-btn" onclick="selectDiningHall('earhart')">
+                <div class="image-placeholder">
+                    <img src="earhart.jpg">
+                </div>
+                <div class="hall-name">Earhart<br>Dining Court</div>
+            </button>
+            
+            <button class="dining-hall-btn" onclick="selectDiningHall('hillenbrand')">
+                <div class="image-placeholder">
+                    <img src="hillenbrand.jpg">
+                </div>
+                <div class="hall-name">Hillenbrand<br>Dining Court</div>
+            </button>
+        </div>
+
+        <div class="dietary-options">
+            <div class="vegan-section">
+                <label for="vegan-select" class="dietary-label">Vegan:</label>
+                <select id="vegan-select" class="vegan-dropdown">
+                    <option value="no">No</option>
+                    <option value="yes">Yes</option>
+                </select>
+            </div>
+
+            <div class="exclude-section">
+                <div class="dietary-label">Exclude Animal Products:</div>
+                <div class="checkbox-grid">
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="beef">
+                        <span class="checkbox-text">Beef</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="pork">
+                        <span class="checkbox-text">Pork</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="chicken">
+                        <span class="checkbox-text">Chicken</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="turkey">
+                        <span class="checkbox-text">Turkey</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="lamb">
+                        <span class="checkbox-text">Lamb</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="fish">
+                        <span class="checkbox-text">Fish</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="seafood">
+                        <span class="checkbox-text">Seafood</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="shellfish">
+                        <span class="checkbox-text">Shellfish</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="dairy">
+                        <span class="checkbox-text">Dairy</span>
+                    </label>
+                    <label class="checkbox-item">
+                        <input type="checkbox" name="exclude" value="eggs">
+                        <span class="checkbox-text">Eggs</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-info">
+        <div class="date-info">Date: 22 September</div>
+        <div class="meal-info">Meal Period: Lunch</div>
+    </div>
+
+    <script>
+        function selectDiningHall(hall) {
+            console.log('Selected dining hall:', hall);
+            // Add your navigation logic here
+            // Example: window.location.href = 'menu.html?hall=' + hall;
+            alert('Selected: ' + hall.charAt(0).toUpperCase() + hall.slice(1) + ' Dining Court');
+        }
+
+        // Handle vegan dropdown change
+        document.addEventListener('DOMContentLoaded', function() {
+            const veganSelect = document.getElementById('vegan-select');
+            const excludeCheckboxes = document.querySelectorAll('input[name="exclude"]');
+
+            veganSelect.addEventListener('change', function() {
+                if (this.value === 'yes') {
+                    // Check all exclude checkboxes
+                    excludeCheckboxes.forEach(checkbox => {
+                        checkbox.checked = true;
+                    });
+                } else {
+                    // Uncheck all exclude checkboxes
+                    excludeCheckboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
