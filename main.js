@@ -213,31 +213,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       if (data.success) {
-        // build HTML output: formatted text + progress bars using meal totals and goals
-        const meal = data.meal || {};
-        const goals = data.goals || {};
         const text = data.text || '';
+        const options = Array.isArray(data.options) ? data.options : [];
 
-        const totals = {
-          calories: meal.total_calories || 0,
-          protein: meal.total_protein || 0,
-          fat: meal.total_fat || 0,
-          carbs: meal.total_carbs || 0,
-          fiber: meal.total_fiber || 0,
-        };
-
-        const makeBar = (label, value, target) => {
-          const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
-          return `<div class="bar-row"><div class="bar-label">${label}</div><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div><div class="bar-numbers">${Math.round(value)} / ${Math.round(target)}</div></div>`;
-        };
-
-        let html = `<div class="result-text"><pre>${text}</pre></div>`;
-        html += '<div class="progress-bars">';
-  html += makeBar('Calories', totals.calories, goals.calorie || 0);
-  html += makeBar('Protein (g)', totals.protein, goals.protein || 0);
-  html += makeBar('Fat (g)', totals.fat, goals.fat || 0);
-  html += makeBar('Carbs (g)', totals.carbs, goals.carbs || 0);
-  html += makeBar('Fiber (g)', totals.fiber, goals.fiber || 0);
+        let html = '<div class="result-text">';
+        if (options.length) {
+          html += '<div class="meal-options">';
+          options.forEach((opt) => {
+            const label = opt.label || 'Option';
+            const body = opt.text || '';
+            html += `<section class="meal-option"><h3>${label}</h3><pre>${body}</pre></section>`;
+          });
+          html += '</div>';
+        } else {
+          html += `<pre>${text}</pre>`;
+        }
         html += '</div>';
         result.innerHTML = html;
       } else {

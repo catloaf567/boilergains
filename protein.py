@@ -18,11 +18,6 @@ EXCLUSION_TOKEN_MAP: Dict[str, List[str]] = {
     'milk': ['milk', 'dairy', 'cheese', 'cream', 'butter', 'yogurt'],
     'egg': ['egg', 'eggs'],
 }
-
-
-PROTEIN_MATCH_EPSILON = 0.5  # allow half-gram rounding wiggle when matching protein targets
-
-
 def expand_excluded_items(selected: Optional[List[str]]) -> List[str]:
     """Return normalized tokens for exclusion selections from the UI."""
     tokens: List[str] = []
@@ -295,6 +290,7 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
     best = None
     best_score = float('inf')
     solutions: List[Dict[str, Any]] = []
+    all_candidates: List[Dict[str, Any]] = []
 
     serving_step = max(0.1, float(serving_step))
 
@@ -344,7 +340,6 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                     total_pro = 0.0
                     total_fat = 0.0
                     total_carbs = 0.0
-                    total_fat = 0.0
                     total_fiber = 0.0
                     items = []
                     for name_i, s in zip(combo, servings):
@@ -353,7 +348,6 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                         total_pro += info.get('protein', 0.0) * s
                         total_fat += info.get('fat', 0.0) * s
                         total_carbs += info.get('carbs', 0.0) * s
-                        total_fat += info.get('fat', 0.0) * s
                         total_fiber += info.get('fiber', 0.0) * s
                         items.append((name_i, s))
 
@@ -361,16 +355,11 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                     if not pairs_ok(combo):
                         continue
 
-                    if not (low_cal <= total_cal <= high_cal and low_pro <= total_pro <= high_pro):
-                        continue
-
-                    if abs(total_pro - protein_goal) > PROTEIN_MATCH_EPSILON:
-                        continue
-
                     # compute a score for tie-breaking (normalized distance)
                     cal_diff = abs(total_cal - calorie_goal) / (calorie_goal or 1)
                     pro_diff = abs(total_pro - protein_goal) / (protein_goal or 1)
                     score = cal_diff + pro_diff
+                    within = low_cal <= total_cal <= high_cal and low_pro <= total_pro <= high_pro
                     sol = {
                         'items': items,
                         'total_calories': total_cal,
@@ -380,7 +369,12 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                         'total_fiber': total_fiber,
                         'tolerance_used': tol,
                         'score': score,
+                        'within_tolerance': within,
                     }
+                    all_candidates.append(sol)
+                    if not within:
+                        continue
+
                     solutions.append(sol)
                     if score < best_score:
                         best_score = score
@@ -389,13 +383,18 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
             break
 
     # sort solutions and attach top alternatives
-    if not best:
-        return None
-    solutions.sort(key=lambda x: x.get('score', float('inf')))
+    pool: List[Dict[str, Any]]
+    if best:
+        pool = sorted(solutions, key=lambda x: x.get('score', float('inf')))
+    else:
+        pool = sorted(all_candidates, key=lambda x: x.get('score', float('inf')))
+        if not pool:
+            return None
+        best = pool[0]
 
     best_protein = best.get('total_protein', 0.0)
     alternatives: List[Dict[str, Any]] = []
-    for sol in solutions:
+    for sol in pool:
         if sol is best:
             continue
         if tuple(sol.get('items', [])) == tuple(best.get('items', [])):

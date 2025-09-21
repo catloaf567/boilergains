@@ -90,18 +90,29 @@ def suggest():
             vegan=vegan,
             allergen=allergen,
             excluded_meats=exclusion_tokens,
+            max_alternatives=2,
         )
         if not meal:
             return jsonify(success=False, error='No suitable meal found.'), 200
-        text = format_meal(meal, foods)
+        text = _format_meal_response(meal, foods, max_options=2)
+        top_option = format_meal(meal, foods)
+        options = [{'label': 'Top choice', 'text': top_option, 'items': meal.get('items', [])}]
+        for idx, alt in enumerate(meal.get('alternatives', []), start=1):
+            if idx > 2:
+                break
+            options.append({
+                'label': f'Option {idx}',
+                'text': format_meal(alt, foods),
+                'items': alt.get('items', []),
+            })
         goals = {
             'calorie': calorie_goal,
             'protein': protein_goal,
-            'carbs': carbs_goal,
+            'carbs': carb_goal,
             'fat': fat_goal,
             'fiber': fiber_goal,
         }
-        return jsonify(success=True, text=text, meal=meal, goals=goals), 200
+        return jsonify(success=True, text=text, meal=meal, goals=goals, options=options), 200
     except Exception as e:
         tb = traceback.format_exc()
         return jsonify(success=False, error='Error computing suggestion: ' + str(e) + '\n' + tb), 500
@@ -301,7 +312,9 @@ def recommend():
 
 
 if __name__ == '__main__':
-    # run server; open http://127.0.0.1:5000 in your browser (do not open index.html via file://)
-    app.run(host='127.0.0.1', port=5000, debug=True)
-
-    
+    # run server; open http://127.0.0.1:<port> in your browser (do not open index.html via file://)
+    port = int(os.environ.get('PORT') or os.environ.get('FLASK_RUN_PORT') or 5050)
+    host = os.environ.get('HOST', '127.0.0.1')
+    debug_env = os.environ.get('FLASK_DEBUG')
+    debug = True if debug_env is None else debug_env.lower() not in {'0', 'false', 'no'}
+    app.run(host=host, port=port, debug=debug)
