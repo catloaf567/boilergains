@@ -116,20 +116,29 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
 
-        const perMealCalories = data.calorie_goal || 0;
-        const perMealProtein = data.protein_goal || 0;
+        const perMealCalories = data.per_meal_calorie || 0;
+        const perMealProtein = data.per_meal_protein || 0;
+        const perMealCarbs = data.per_meal_carbs || 0;
+        const perMealFat = data.per_meal_fat || 0;
+        const perMealFiber = data.per_meal_fiber || 0;
         const dailyCalories = data.daily_calorie_goal || perMealCalories;
         const dailyProtein = data.daily_protein_goal || perMealProtein;
+        const dailyCarbs = data.daily_carbs || perMealCarbs;
+        const dailyFat = data.daily_fat || perMealFat;
+        const dailyFiber = data.daily_fiber || perMealFiber;
         const mealsPerDay = data.meals_per_day || 3;
 
         calorieInput.value = Math.round(perMealCalories);
         proteinInput.value = Math.round(perMealProtein);
+        document.getElementById('carbs').value = Math.round(perMealCarbs);
+        document.getElementById('fat').value = Math.round(perMealFat);
+        document.getElementById('fiber').value = Math.round(perMealFiber);
         lockGoals(true);
 
         setGoalMessage(
-          `Recommended target for this meal (assuming ${mealsPerDay} meals/day): ${Math.round(perMealCalories)} kcal & ${Math.round(perMealProtein)} g protein (daily estimate: ${Math.round(dailyCalories)} kcal, ${Math.round(dailyProtein)} g).`
+          `Recommended target for this meal (assuming ${mealsPerDay} meals/day): ${Math.round(perMealCalories)} kcal & ${Math.round(perMealProtein)} g protein, ${Math.round(perMealCarbs)} g carbs, ${Math.round(perMealFat)} g fat, ${Math.round(perMealFiber)} g fiber (daily estimate: ${Math.round(dailyCalories)} kcal, ${Math.round(dailyProtein)} g).`
         );
-        setDailyTotals(`Daily requirement: ${Math.round(dailyCalories)} kcal & ${Math.round(dailyProtein)} g protein.`);
+        setDailyTotals(`Daily requirement: ${Math.round(dailyCalories)} kcal • ${Math.round(dailyProtein)} g protein • ${Math.round(dailyCarbs)} g carbs • ${Math.round(dailyFat)} g fat • ${Math.round(dailyFiber)} g fiber.`);
       } catch (err) {
         setGoalMessage(`Failed to fetch recommendations: ${err}`, true);
         setDailyTotals('');
@@ -159,6 +168,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const payload = {
       calorie_goal: Number(calorieInput.value) || 0,
       protein_goal: Number(proteinInput.value) || 0,
+        carbs_goal: Number(document.getElementById('carbs').value) || 0,
+        fat_goal: Number(document.getElementById('fat').value) || 0,
+        fiber_goal: Number(document.getElementById('fiber').value) || 0,
       vegan: isVegan,
       excluded_items: excludedItems,
       path: selectedDatasetPath
@@ -176,7 +188,33 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       if (data.success) {
-        result.textContent = data.text;
+        // build HTML output: formatted text + progress bars using meal totals and goals
+        const meal = data.meal || {};
+        const goals = data.goals || {};
+        const text = data.text || '';
+
+        const totals = {
+          calories: meal.total_calories || 0,
+          protein: meal.total_protein || 0,
+          fat: meal.total_fat || 0,
+          carbs: meal.total_carbs || 0,
+          fiber: meal.total_fiber || 0,
+        };
+
+        const makeBar = (label, value, target) => {
+          const pct = target > 0 ? Math.min(100, Math.round((value / target) * 100)) : 0;
+          return `<div class="bar-row"><div class="bar-label">${label}</div><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div><div class="bar-numbers">${Math.round(value)} / ${Math.round(target)}</div></div>`;
+        };
+
+        let html = `<div class="result-text"><pre>${text}</pre></div>`;
+        html += '<div class="progress-bars">';
+  html += makeBar('Calories', totals.calories, goals.calorie || 0);
+  html += makeBar('Protein (g)', totals.protein, goals.protein || 0);
+  html += makeBar('Fat (g)', totals.fat, goals.fat || 0);
+  html += makeBar('Carbs (g)', totals.carbs, goals.carbs || 0);
+  html += makeBar('Fiber (g)', totals.fiber, goals.fiber || 0);
+        html += '</div>';
+        result.innerHTML = html;
       } else {
         result.textContent = data.error || 'No matching meal found.';
       }

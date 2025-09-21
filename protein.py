@@ -5,6 +5,12 @@ import difflib
 import pandas as pd
 from typing import Dict, Any, List, Tuple, Optional
 
+# import demographics helper for calculating recommended daily macros
+try:
+    from demographics import calculate_nutrition_needs
+except Exception:
+    calculate_nutrition_needs = None
+
 
 
 
@@ -285,6 +291,7 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                     total_cal = 0.0
                     total_pro = 0.0
                     total_carbs = 0.0
+                    total_fat = 0.0
                     total_fiber = 0.0
                     items = []
                     for name_i, s in zip(combo, servings):
@@ -292,6 +299,7 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                         total_cal += info.get('calories', 0.0) * s
                         total_pro += info.get('protein', 0.0) * s
                         total_carbs += info.get('carbs', 0.0) * s
+                        total_fat += info.get('fat', 0.0) * s
                         total_fiber += info.get('fiber', 0.0) * s
                         items.append((name_i, s))
 
@@ -310,6 +318,7 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                         'items': items,
                         'total_calories': total_cal,
                         'total_protein': total_pro,
+                        'total_fat': total_fat,
                         'total_carbs': total_carbs,
                         'total_fiber': total_fiber,
                         'tolerance_used': tol,
@@ -352,11 +361,12 @@ def format_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]]) -> str:
         info = foods.get(name, {})
         c = info.get('calories', 0.0) * servings
         p = info.get('protein', 0.0) * servings
+        fats = info.get('fat', 0.0) * servings
         carbs = info.get('carbs', 0.0) * servings
         fiber = info.get('fiber', 0.0) * servings
         serving_desc = info.get('serving') or '1 serving'
-        lines.append(f"{servings} x {name} ({serving_desc}) — {c:.0f} kcal, {p:.1f} g protein, {carbs:.1f} g carbs, {fiber:.1f} g fiber")
-    lines.append(f"Total: {meal['total_calories']:.0f} kcal, {meal['total_protein']:.1f} g protein, {meal.get('total_carbs', 0.0):.1f} g carbs, {meal.get('total_fiber', 0.0):.1f} g fiber (tol {meal['tolerance_used']*100:.0f}% )")
+        lines.append(f"{servings} x {name} ({serving_desc}) — {c:.0f} kcal, {p:.1f} g protein, {fats:.1f} g fat, {carbs:.1f} g carbs, {fiber:.1f} g fiber")
+    lines.append(f"Total: {meal['total_calories']:.0f} kcal, {meal['total_protein']:.1f} g protein, {meal.get('total_fat', 0.0):.1f} g fat, {meal.get('total_carbs', 0.0):.1f} g carbs, {meal.get('total_fiber', 0.0):.1f} g fiber (tol {meal['tolerance_used']*100:.0f}% )")
     return '\n'.join(lines)
 
 
@@ -368,7 +378,7 @@ def _progress_bar(value: float, target: float, width: int = 30) -> str:
     return '[' + '#' * filled + '-' * (width - filled) + f'] {value:.0f}/{target:.0f}'
 
 
-def pretty_print_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]], calorie_goal: float = 0, protein_goal: float = 0) -> None:
+def pretty_print_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]], calorie_goal: float = 0, protein_goal: float = 0, carbs_goal: float = 0, fat_goal: float = 0, fiber_goal: float = 0) -> None:
     """Print the meal in a neat table with progress bars for calories and protein."""
     if not meal:
         print('No suitable meal found.')
@@ -380,7 +390,7 @@ def pretty_print_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]], ca
     qty_w = max((len(str(q)) for _, q in items), default=1)
 
     print('\nSuggested meal:')
-    print(f"{'Qty':>{qty_w}}  {'Item':<{name_w}}  {'Serving':<12}  {'kcal':>6}  {'Protein(g)':>11}  {'Carbs(g)':>9}  {'Fiber(g)':>9}")
+    print(f"{'Qty':>{qty_w}}  {'Item':<{name_w}}  {'Serving':<12}  {'kcal':>6}  {'Protein(g)':>11}  {'Fat(g)':>8}  {'Carbs(g)':>9}  {'Fiber(g)':>9}")
     print('-' * (qty_w + name_w + 50))
     for name, servings in items:
         info = foods.get(name, {})
@@ -389,19 +399,27 @@ def pretty_print_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]], ca
         p = info.get('protein', 0.0) * servings
         carbs = info.get('carbs', 0.0) * servings
         fiber = info.get('fiber', 0.0) * servings
-        print(f"{servings:>{qty_w}}  {name:<{name_w}}  {serving_desc:<12}  {c:6.0f}  {p:11.1f}  {carbs:9.1f}  {fiber:9.1f}")
+    fats = info.get('fat', 0.0) * servings
+    print(f"{servings:>{qty_w}}  {name:<{name_w}}  {serving_desc:<12}  {c:6.0f}  {p:11.1f}  {fats:8.1f}  {carbs:9.1f}  {fiber:9.1f}")
 
     total_cal = meal.get('total_calories', 0.0)
     total_pro = meal.get('total_protein', 0.0)
     total_carbs = meal.get('total_carbs', 0.0)
     total_fiber = meal.get('total_fiber', 0.0)
+    total_fat = meal.get('total_fat', 0.0)
 
     print('\nTotals:')
-    print(f"  Calories: {total_cal:.0f} kcal   Protein: {total_pro:.1f} g   Carbs: {total_carbs:.1f} g   Fiber: {total_fiber:.1f} g")
+    print(f"  Calories: {total_cal:.0f} kcal   Protein: {total_pro:.1f} g   Fat: {total_fat:.1f} g   Carbs: {total_carbs:.1f} g   Fiber: {total_fiber:.1f} g")
     if calorie_goal:
         print('  Calorie progress: ' + _progress_bar(total_cal, calorie_goal))
     if protein_goal:
         print('  Protein progress: ' + _progress_bar(total_pro, protein_goal))
+    if fat_goal:
+        print('  Fat progress: ' + _progress_bar(total_fat, fat_goal))
+    if carbs_goal:
+        print('  Carbs progress: ' + _progress_bar(total_carbs, carbs_goal))
+    if fiber_goal:
+        print('  Fiber progress: ' + _progress_bar(total_fiber, fiber_goal))
 
 
 
@@ -425,12 +443,17 @@ def suggest_from_shortlist(foods: Dict[str, Dict[str, Any]], shortlist: List[str
                         tolerance=tolerance, max_items=max_items, max_servings=max_servings, top_k=len(subfoods))
 
 
-def _safe_float_input(prompt: str) -> float:
+def _safe_float_input(prompt: str, default: Optional[float] = None) -> float:
+    """Prompt for a float; accept Enter to use default if provided."""
     while True:
         try:
-            v = input(prompt)
+            v = input(prompt).strip()
+            if v == '' and default is not None:
+                return float(default)
             return float(v)
         except Exception:
+            if v == '' and default is not None:
+                return float(default)
             print('Please enter a number (e.g., 2000 or 50).')
 
 
@@ -471,8 +494,39 @@ def main():
             # ignore failure; suggest_meal will fallback to built-in map
             pass
 
-    cal_goal = _safe_float_input('Enter calorie goal (kcal): ')
-    pro_goal = _safe_float_input('Enter protein goal (g): ')
+    # If demographics helper is available, offer to compute recommended daily macros
+    per_meal_defaults = {}
+    if calculate_nutrition_needs is not None:
+        use_demo = input('\nWould you like to enter your demographics to get recommended daily macros? (y/n): ').strip().lower() in ('y', 'yes')
+        if use_demo:
+            try:
+                age = int(input('Age (years): ').strip())
+                weight = float(input('Weight (kg): ').strip())
+                height = float(input('Height (cm): ').strip())
+                gender = input("Gender ('male' or 'female'): ").strip().lower()
+                activity = input("Activity level (sedentary, lightly_active, moderately_active, very_active, extremely_active): ").strip()
+                demo = calculate_nutrition_needs(age, weight, height, gender, activity)
+                daily_cal = demo.get('calories', 0)
+                daily_pro = demo.get('protein_g', 0)
+                daily_carbs = demo.get('carbohydrates_g', 0)
+                daily_fat = demo.get('fat_g', 0)
+                daily_fiber = demo.get('fiber_g', 0)
+                per_meal_defaults = {
+                    'calories': round(daily_cal / 3),
+                    'protein': round(daily_pro / 3, 1),
+                    'carbs': round(daily_carbs / 3, 1),
+                    'fat': round(daily_fat / 3, 1),
+                    'fiber': round(daily_fiber / 3, 1),
+                    'daily_cal': daily_cal,
+                    'daily_pro': daily_pro,
+                }
+                print(f"\nRecommended target for this meal (assuming 3 meals/day): {per_meal_defaults['calories']} kcal & {per_meal_defaults['protein']} g protein (daily estimate: {daily_cal} kcal, {daily_pro} g).\n")
+                print(f"Daily requirement: {daily_cal} kcal & {daily_pro} g protein.")
+            except Exception as e:
+                print('Failed to compute demographics-based recommendations:', e)
+
+    cal_goal = _safe_float_input('Enter calorie goal (kcal) [press Enter to use recommended]: ', default=per_meal_defaults.get('calories'))
+    pro_goal = _safe_float_input('Enter protein goal (g) [press Enter to use recommended]: ', default=per_meal_defaults.get('protein'))
     veg = input('Are you vegan? (y/n): ').strip().lower() in ('y', 'yes')
     allergen = input('Allergen to avoid (leave blank if none): ').strip()
 
@@ -500,6 +554,7 @@ def main():
     if chosen_shortlist:
         meal = suggest_from_shortlist(foods, chosen_shortlist, cal_goal, pro_goal, excluded_meats=excluded_meats)
     else:
+        # pass per-meal carb/fat/fiber defaults into suggestion if available
         meal = suggest_meal(foods, cal_goal, pro_goal, vegan=veg, allergen=allergen or None, excluded_meats=excluded_meats)
 
     if not meal:
@@ -508,7 +563,11 @@ def main():
 
     # Present alternatives if available
     alts = meal.get('alternatives', []) if isinstance(meal, dict) else []
-    pretty_print_meal(meal, foods, calorie_goal=cal_goal, protein_goal=pro_goal)
+    # display macro goals (use per-meal defaults if available)
+    carbs_goal = per_meal_defaults.get('carbs', 0)
+    fat_goal = per_meal_defaults.get('fat', 0)
+    fiber_goal = per_meal_defaults.get('fiber', 0)
+    pretty_print_meal(meal, foods, calorie_goal=cal_goal, protein_goal=pro_goal, carbs_goal=carbs_goal, fat_goal=fat_goal, fiber_goal=fiber_goal)
     if alts:
         print('\nOther close options:')
         for i, a in enumerate(alts, 1):

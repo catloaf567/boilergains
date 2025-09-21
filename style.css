@@ -209,3 +209,14 @@ form#suggestForm fieldset legend {
   font-family: Menlo, Monaco, monospace;
   font-size: 0.95rem;
 }
+
+.progress-bars { margin-top: 12px; display: grid; gap: 8px; }
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-label { width: 120px; font-weight: 600; }
+.bar { flex: 1 1 auto; height: 12px; background: #e6e6e6; border-radius: 6px; overflow: hidden; }
+.bar-fill { height: 100%; background: linear-gradient(90deg,#f1c937,#f39c12); width: 0%; }
+.bar-numbers { width: 100px; text-align: right; font-family: monospace; }
+
+.goal-message.secondary { color: #666; font-size: 0.85rem; margin-top: 6px; }
+
+.result-text pre { margin: 0; white-space: pre-wrap; font-family: Menlo, Monaco, monospace; }

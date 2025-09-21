@@ -45,6 +45,9 @@ def suggest():
     try:
         calorie_goal = float(data.get('calorie_goal', 0))
         protein_goal = float(data.get('protein_goal', 0))
+        carbs_goal = float(data.get('carbs_goal', 0))
+        fat_goal = float(data.get('fat_goal', 0))
+        fiber_goal = float(data.get('fiber_goal', 0))
     except Exception:
         return jsonify(success=False, error='Invalid numeric inputs'), 400
     vegan = bool(data.get('vegan', False))
@@ -60,17 +63,18 @@ def suggest():
         return jsonify(success=False, error='Error loading Excel: ' + str(e) + '\n' + tb), 500
 
     try:
-        meal = suggest_meal(
-            foods,
-            calorie_goal,
-            protein_goal,
-            vegan=vegan,
-            allergen=allergen,
-        )
+        meal = suggest_meal(foods, calorie_goal, protein_goal, vegan=vegan, allergen=allergen)
         if not meal:
             return jsonify(success=False, error='No suitable meal found.'), 200
-        text = _format_meal_response(meal, foods)
-        return jsonify(success=True, text=text), 200
+        text = format_meal(meal, foods)
+        goals = {
+            'calorie': calorie_goal,
+            'protein': protein_goal,
+            'carbs': carbs_goal,
+            'fat': fat_goal,
+            'fiber': fiber_goal,
+        }
+        return jsonify(success=True, text=text, meal=meal, goals=goals), 200
     except Exception as e:
         tb = traceback.format_exc()
         return jsonify(success=False, error='Error computing suggestion: ' + str(e) + '\n' + tb), 500
@@ -102,8 +106,13 @@ def _protein_factor_for_activity(age: float, activity_level: str) -> float:
 
 
 def _recommended_goals(age: float, gender: str, height_cm: float, weight_kg: float,
-                       activity_level: str, meals_per_day: int = 3) -> Tuple[float, float, float, float]:
-    """Return (per_meal_calories, per_meal_protein, daily_calories, daily_protein)."""
+                       activity_level: str, meals_per_day: int = 3):
+    """Return per-meal and daily goals for calories, protein, carbs, fat, fiber.
+
+    Returns a dict with keys:
+      per_meal_cal, per_meal_protein, per_meal_carbs, per_meal_fat, per_meal_fiber,
+      daily_cal, daily_protein, daily_carbs, daily_fat, daily_fiber
+    """
     if meals_per_day <= 0:
         raise ValueError('meals_per_day must be positive')
     gender_key = (gender or 'unspecified').strip().lower()
@@ -113,16 +122,36 @@ def _recommended_goals(age: float, gender: str, height_cm: float, weight_kg: flo
         'unspecified': 5,
     }.get(gender_key, 5)
 
+    # Basal metabolic rate (Mifflin-St Jeor-like)
     bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age + gender_offset
     activity_factor = _activity_multiplier(activity_level)
     daily_calories = max(bmr * activity_factor, 1200.0)
 
+    # Protein: use weight-based recommendation scaled by activity
     protein_factor = _protein_factor_for_activity(age, activity_level)
     daily_protein = max(weight_kg * protein_factor, 45.0)
 
-    per_meal_calories = daily_calories / meals_per_day
-    per_meal_protein = daily_protein / meals_per_day
-    return per_meal_calories, per_meal_protein, daily_calories, daily_protein
+    # Carbs: 50% of calories, fat: 25% of calories, fiber: 14g per 1000 kcal
+    carbs_cal = daily_calories * 0.50
+    fat_cal = daily_calories * 0.25
+    daily_carbs = carbs_cal / 4.0
+    daily_fat = fat_cal / 9.0
+    daily_fiber = (daily_calories / 1000.0) * 14.0
+
+    per_meal = lambda v: v / meals_per_day
+
+    return {
+        'per_meal_cal': per_meal(daily_calories),
+        'per_meal_protein': per_meal(daily_protein),
+        'per_meal_carbs': per_meal(daily_carbs),
+        'per_meal_fat': per_meal(daily_fat),
+        'per_meal_fiber': per_meal(daily_fiber),
+        'daily_cal': daily_calories,
+        'daily_protein': daily_protein,
+        'daily_carbs': daily_carbs,
+        'daily_fat': daily_fat,
+        'daily_fiber': daily_fiber,
+    }
 
 
 def _format_meal_response(meal: dict, foods: dict, protein_window: float = 5.0, max_options: int = 4) -> str:
@@ -183,7 +212,7 @@ def recommend():
         return jsonify(success=False, error='meals_per_day must be an integer.'), 400
     if meals_per_day <= 0 or meals_per_day > 8:
         return jsonify(success=False, error='meals_per_day must be between 1 and 8.'), 400
-    per_meal_cal, per_meal_pro, daily_cal, daily_pro = _recommended_goals(
+    goals = _recommended_goals(
         age,
         gender,
         height_cm,
@@ -193,10 +222,16 @@ def recommend():
     )
     return jsonify(
         success=True,
-        calorie_goal=round(per_meal_cal, 1),
-        protein_goal=round(per_meal_pro, 1),
-        daily_calorie_goal=round(daily_cal, 1),
-        daily_protein_goal=round(daily_pro, 1),
+        per_meal_calorie=round(goals['per_meal_cal'], 1),
+        per_meal_protein=round(goals['per_meal_protein'], 1),
+        per_meal_carbs=round(goals['per_meal_carbs'], 1),
+        per_meal_fat=round(goals['per_meal_fat'], 1),
+        per_meal_fiber=round(goals['per_meal_fiber'], 1),
+        daily_calorie_goal=round(goals['daily_cal'], 1),
+        daily_protein_goal=round(goals['daily_protein'], 1),
+        daily_carbs=round(goals['daily_carbs'], 1),
+        daily_fat=round(goals['daily_fat'], 1),
+        daily_fiber=round(goals['daily_fiber'], 1),
         meals_per_day=meals_per_day,
     )
 
