@@ -38,7 +38,8 @@ save room for dessert? - saves calories
 make it more nuanced with vegetarian options, dairy free, etc
 Incorporating more niche sections such as salad bars, make your own pizza, sizzling pasta opions
 Add individual meal  - divde by 2 if only 2 daily meals, divide by 3 if 3 meals
-
+add meal time selection
+add web scraping
 
 
 ## Built With
