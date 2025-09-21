@@ -49,22 +49,6 @@ def suggest():
         return jsonify(success=False, error='Invalid numeric inputs'), 400
     vegan = bool(data.get('vegan', False))
     allergen = data.get('allergen') or None
-    excluded_items = data.get('excluded_items') or []
-    if isinstance(excluded_items, list):
-        excluded_items = [str(item).strip().lower() for item in excluded_items if str(item).strip()]
-    else:
-        excluded_items = []
-
-    if excluded_items:
-        substitution_map = {
-            'beef': {'beef', 'meat'},
-        }
-        expanded = set()
-        for item in excluded_items:
-            expanded.add(item)
-            expanded.update(substitution_map.get(item, []))
-        excluded_items = sorted(expanded)
-
     # ensure path is server-side and exists
     if not os.path.exists(path):
         return jsonify(success=False, error=f'File not found on server: {path}'), 400
@@ -82,7 +66,6 @@ def suggest():
             protein_goal,
             vegan=vegan,
             allergen=allergen,
-            excluded_meats=excluded_items if not vegan else None,
         )
         if not meal:
             return jsonify(success=False, error='No suitable meal found.'), 200
@@ -119,15 +102,16 @@ def _protein_factor_for_activity(age: float, activity_level: str) -> float:
 
 
 def _recommended_goals(age: float, gender: str, height_cm: float, weight_kg: float,
-                       activity_level: str) -> Tuple[float, float, float, float]:
+                       activity_level: str, meals_per_day: int = 3) -> Tuple[float, float, float, float]:
     """Return (per_meal_calories, per_meal_protein, daily_calories, daily_protein)."""
+    if meals_per_day <= 0:
+        raise ValueError('meals_per_day must be positive')
     gender_key = (gender or 'unspecified').strip().lower()
     gender_offset = {
         'male': 5,
         'female': -161,
-        'nonbinary': -78,
-        'unspecified': -78,
-    }.get(gender_key, -78)
+        'unspecified': 5,
+    }.get(gender_key, 5)
 
     bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age + gender_offset
     activity_factor = _activity_multiplier(activity_level)
@@ -136,8 +120,8 @@ def _recommended_goals(age: float, gender: str, height_cm: float, weight_kg: flo
     protein_factor = _protein_factor_for_activity(age, activity_level)
     daily_protein = max(weight_kg * protein_factor, 45.0)
 
-    per_meal_calories = daily_calories
-    per_meal_protein = daily_protein
+    per_meal_calories = daily_calories / meals_per_day
+    per_meal_protein = daily_protein / meals_per_day
     return per_meal_calories, per_meal_protein, daily_calories, daily_protein
 
 
@@ -192,12 +176,20 @@ def recommend():
 
     gender = str(data.get('gender', 'unspecified'))
     activity_level = str(data.get('activity_level', 'sedentary'))
+    meals_per_day = data.get('meals_per_day', 3)
+    try:
+        meals_per_day = int(meals_per_day)
+    except (TypeError, ValueError):
+        return jsonify(success=False, error='meals_per_day must be an integer.'), 400
+    if meals_per_day <= 0 or meals_per_day > 8:
+        return jsonify(success=False, error='meals_per_day must be between 1 and 8.'), 400
     per_meal_cal, per_meal_pro, daily_cal, daily_pro = _recommended_goals(
         age,
         gender,
         height_cm,
         weight_kg,
         activity_level,
+        meals_per_day=meals_per_day,
     )
     return jsonify(
         success=True,
@@ -205,6 +197,7 @@ def recommend():
         protein_goal=round(per_meal_pro, 1),
         daily_calorie_goal=round(daily_cal, 1),
         daily_protein_goal=round(daily_pro, 1),
+        meals_per_day=meals_per_day,
     )
 
 

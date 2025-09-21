@@ -18,18 +18,17 @@
             <p>Provide your meal goals and click on "suggest meal"</p>
 
             <form id="suggestForm">
-                <p class="note">Choose dining court dataset (defaults to Windsor)</p>
-
-                <label>Dining court dataset:
-                    <select id="dataset" name="dataset">
-                        <option value="windsor" selected>Windsor (Windsor-20250922.xlsx)</option>
-                        <option value="hillenbrand">Hillenbrand (Hillenbrand-Lunch20250922.xlsx)</option>
-                        <option value="custom">Custom path</option>
-                    </select>
-                </label>
-                <label id="customPathLabel" style="display:none">Custom dataset path:
-                    <input type="text" id="customPath" name="customPath" placeholder="e.g. data/myfile.xlsx">
-                </label>
+                <fieldset class="dataset-group" aria-labelledby="datasetLegend">
+                    <legend id="datasetLegend">Select dining court</legend>
+                    <p class="note">Choose a dataset (defaults to Windsor).</p>
+                    <div class="dataset-options" role="group" aria-label="Dining court datasets">
+                        <button type="button" class="dataset-option active" data-path="Windsor-20250922.xlsx">Windsor</button>
+                        <button type="button" class="dataset-option" data-path="EarhartLunch20250922.xlsx">Earhart</button>
+                        <button type="button" class="dataset-option" data-path="FordLunch20250922.xlsx">Ford</button>
+                        <button type="button" class="dataset-option" data-path="WileyLunch20250922.xlsx">Wiley</button>
+                        <button type="button" class="dataset-option" data-path="HillenbrandLunch20250922.xlsx">Hillenbrand</button>
+                    </div>
+                </fieldset>
 
                 <fieldset class="demographics" aria-labelledby="demographicsLegend">
                     <legend id="demographicsLegend">Your details</legend>
@@ -41,7 +40,6 @@
                             <option value="unspecified" selected>Prefer not to say</option>
                             <option value="female">Female</option>
                             <option value="male">Male</option>
-                            <option value="nonbinary">Non-binary</option>
                         </select>
                     </label>
                     <label>Height (cm)
@@ -75,6 +73,7 @@
                         <input type="number" id="protein" name="protein" value="70" required>
                     </label>
                     <p id="goalMessage" class="goal-message" role="status" aria-live="polite"></p>
+                    <p id="dailyTotals" class="goal-message secondary" role="status" aria-live="polite"></p>
                 </fieldset>
 
                 <label>Vegan:
@@ -99,14 +98,6 @@
                         <label><input type="checkbox" value="milk"> Dairy (milk/cheese)</label>
                         <label><input type="checkbox" value="egg"> Eggs</label>
                     </div>
-                </fieldset>
-
-                <fieldset>
-                    <legend>Exclude meats (optional)</legend>
-                    <label><input type="checkbox" name="exclude_meat" value="beef"> Beef</label>
-                    <label><input type="checkbox" name="exclude_meat" value="chicken"> Chicken</label>
-                    <label><input type="checkbox" name="exclude_meat" value="pork"> Pork</label>
-                    <label><input type="checkbox" name="exclude_meat" value="ham"> Ham</label>
                 </fieldset>
 
                 <button type="submit">Suggest meal</button>

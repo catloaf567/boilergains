@@ -13,7 +13,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const useRecommendedBtn = document.getElementById('useRecommended');
   const editGoalsBtn = document.getElementById('editGoals');
   const goalMessage = document.getElementById('goalMessage');
+  const dailyTotals = document.getElementById('dailyTotals');
+  const datasetButtons = document.querySelectorAll('.dataset-option');
   let goalsLocked = false;
+  let selectedDatasetPath = (() => {
+    if (!datasetButtons || datasetButtons.length === 0) {
+      return 'Windsor-20250922.xlsx';
+    }
+    const preset = Array.from(datasetButtons).find((btn) => btn.classList.contains('active'));
+    return (preset && preset.dataset.path) || datasetButtons[0].dataset.path;
+  })();
+
+  datasetButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      selectedDatasetPath = btn.dataset.path;
+      datasetButtons.forEach((other) => {
+        other.classList.toggle('active', other === btn);
+      });
+    });
+  });
 
   const toggleExcludeSection = () => {
     if (!excludeSection) return;
@@ -37,8 +55,14 @@ document.addEventListener('DOMContentLoaded', () => {
     goalMessage.classList.toggle('error', !!isError);
   };
 
+  const setDailyTotals = (msg) => {
+    if (!dailyTotals) return;
+    dailyTotals.textContent = msg || '';
+  };
+
   lockGoals(false);
   setGoalMessage('');
+  setDailyTotals('');
 
   const prerequisiteInputs = [ageInput, heightInput, weightInput, genderSelect, activitySelect];
 
@@ -46,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (goalsLocked) {
       lockGoals(false);
       setGoalMessage('Inputs changed. Click "Use recommended goals" to refresh.');
+      setDailyTotals('');
     }
   };
 
@@ -71,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
       useRecommendedBtn.disabled = true;
       try {
         setGoalMessage('Calculating recommended goals...');
+        setDailyTotals('');
         const resp = await fetch('/recommend', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -86,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!resp.ok || !data.success) {
           const message = data.error || `Unable to calculate recommendations (status ${resp.status}).`;
           setGoalMessage(message, true);
+          setDailyTotals('');
           return;
         }
 
@@ -93,16 +120,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const perMealProtein = data.protein_goal || 0;
         const dailyCalories = data.daily_calorie_goal || perMealCalories;
         const dailyProtein = data.daily_protein_goal || perMealProtein;
+        const mealsPerDay = data.meals_per_day || 3;
 
         calorieInput.value = Math.round(perMealCalories);
         proteinInput.value = Math.round(perMealProtein);
         lockGoals(true);
 
         setGoalMessage(
-          `Recommended target for this meal: ${Math.round(perMealCalories)} kcal & ${Math.round(perMealProtein)} g protein (daily estimate: ${Math.round(dailyCalories)} kcal, ${Math.round(dailyProtein)} g).`
+          `Recommended target for this meal (assuming ${mealsPerDay} meals/day): ${Math.round(perMealCalories)} kcal & ${Math.round(perMealProtein)} g protein (daily estimate: ${Math.round(dailyCalories)} kcal, ${Math.round(dailyProtein)} g).`
         );
+        setDailyTotals(`Daily requirement: ${Math.round(dailyCalories)} kcal & ${Math.round(dailyProtein)} g protein.`);
       } catch (err) {
         setGoalMessage(`Failed to fetch recommendations: ${err}`, true);
+        setDailyTotals('');
       } finally {
         useRecommendedBtn.disabled = false;
       }
@@ -113,6 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
     editGoalsBtn.addEventListener('click', () => {
       lockGoals(false);
       setGoalMessage('You can now edit the calorie and protein goals.');
+      setDailyTotals('');
     });
   }
 
@@ -129,7 +160,8 @@ document.addEventListener('DOMContentLoaded', () => {
       calorie_goal: Number(calorieInput.value) || 0,
       protein_goal: Number(proteinInput.value) || 0,
       vegan: isVegan,
-      excluded_items: excludedItems
+      excluded_items: excludedItems,
+      path: selectedDatasetPath
     };
 
     try {

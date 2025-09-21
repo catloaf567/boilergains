@@ -161,6 +161,45 @@ form#suggestForm fieldset legend {
   display: block;
 }
 
+.dataset-group {
+  display: grid;
+  gap: 12px;
+}
+
+.dataset-group .note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.dataset-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dataset-option {
+  flex: 1 1 120px;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #ececec;
+  color: #292424;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dataset-option.active {
+  background: #f1c937;
+  border-color: #f1c937;
+  font-weight: 600;
+}
+
+.dataset-option:focus-visible {
+  outline: 2px solid #292424;
+  outline-offset: 2px;
+}
+
 .result {
   margin-top: 16px;
   background: #f1f5f1;
