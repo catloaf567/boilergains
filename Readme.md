@@ -1,8 +1,9 @@
-# The-Protein-Cult
+# boiler-gains
 
 
 ## Inspiration
 
+We noticed the lack of nutritional guidance on a daily basis for an average boilermaker who has a meal plan. Yes, the Purdue Menus provides detailed nutritional values for every food item, but what if you do not have the time to check all the values, 
 
 
 ## What it does
