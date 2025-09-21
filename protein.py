@@ -159,7 +159,8 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                  vegan: bool = False, allergen: Optional[str] = None,
                  excluded_meats: Optional[List[str]] = None,
                  tolerance: float = 0.07, max_items: int = 3, max_servings: int = 3,
-                 top_k: int = 30) -> Optional[Dict[str, Any]]:
+                 top_k: int = 30, protein_window: float = 5.0,
+                 max_alternatives: int = 5) -> Optional[Dict[str, Any]]:
     """Suggest a meal (combination of items and integer servings) that meets calorie and protein goals.
 
     Strategy:
@@ -325,7 +326,21 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
     if not best:
         return None
     solutions.sort(key=lambda x: x.get('score', float('inf')))
-    best['alternatives'] = solutions[:6]
+
+    best_protein = best.get('total_protein', 0.0)
+    alternatives: List[Dict[str, Any]] = []
+    for sol in solutions:
+        if sol is best:
+            continue
+        if tuple(sol.get('items', [])) == tuple(best.get('items', [])):
+            continue
+        if abs(sol.get('total_protein', 0.0) - best_protein) > protein_window:
+            continue
+        alternatives.append(sol)
+        if len(alternatives) >= max_alternatives:
+            break
+
+    best['alternatives'] = alternatives
     return best
 
 

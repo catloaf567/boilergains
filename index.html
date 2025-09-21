@@ -31,13 +31,51 @@
                     <input type="text" id="customPath" name="customPath" placeholder="e.g. data/myfile.xlsx">
                 </label>
 
-                <label>Calorie goal (kcal):
-                    <input type="number" id="calorie" name="calorie" value="2000" required>
-                </label>
+                <fieldset class="demographics" aria-labelledby="demographicsLegend">
+                    <legend id="demographicsLegend">Your details</legend>
+                    <label>Age
+                        <input type="number" id="age" name="age" min="1" max="120" placeholder="Years">
+                    </label>
+                    <label>Gender
+                        <select id="gender" name="gender">
+                            <option value="unspecified" selected>Prefer not to say</option>
+                            <option value="female">Female</option>
+                            <option value="male">Male</option>
+                            <option value="nonbinary">Non-binary</option>
+                        </select>
+                    </label>
+                    <label>Height (cm)
+                        <input type="number" id="height" name="height" min="90" max="250" placeholder="cm">
+                    </label>
+                    <label>Weight (kg)
+                        <input type="number" id="weight" name="weight" min="30" max="250" placeholder="kg">
+                    </label>
+                    <label>Activity level
+                        <select id="activity" name="activity">
+                            <option value="sedentary" selected>Sedentary (little exercise)</option>
+                            <option value="light">Light (1-2 days/week)</option>
+                            <option value="moderate">Moderate (3-5 days/week)</option>
+                            <option value="active">Active (6-7 days/week)</option>
+                            <option value="athlete">Athlete (twice daily training)</option>
+                        </select>
+                    </label>
+                </fieldset>
 
-                <label>Protein goal (g):
-                    <input type="number" id="protein" name="protein" value="70" required>
-                </label>
+                <fieldset class="goal-group" aria-labelledby="goalLegend">
+                    <legend id="goalLegend">Meal goals</legend>
+                    <div class="goal-actions">
+                        <button type="button" id="useRecommended">Use recommended goals</button>
+                        <button type="button" id="editGoals" class="secondary" disabled>Edit goals manually</button>
+                    </div>
+                    <label>Calorie goal (kcal):
+                        <input type="number" id="calorie" name="calorie" value="2000" required>
+                    </label>
+
+                    <label>Protein goal (g):
+                        <input type="number" id="protein" name="protein" value="70" required>
+                    </label>
+                    <p id="goalMessage" class="goal-message" role="status" aria-live="polite"></p>
+                </fieldset>
 
                 <label>Vegan:
                     <select id="vegan" name="vegan">
@@ -46,9 +84,22 @@
                     </select>
                 </label>
 
-                <label>Allergen to avoid:
-                    <input type="text" id="allergen" name="allergen" placeholder="e.g., soy">
-                </label>
+                <fieldset id="excludeSection" class="exclude-group" aria-labelledby="excludeLegend">
+                    <legend id="excludeLegend">Exclude items</legend>
+                    <p class="note">Select any items you want to leave out when not eating vegan.</p>
+                    <div class="exclude-options">
+                        <label><input type="checkbox" value="beef"> Beef</label>
+                        <label><input type="checkbox" value="pork"> Pork</label>
+                        <label><input type="checkbox" value="chicken"> Chicken</label>
+                        <label><input type="checkbox" value="turkey"> Turkey</label>
+                        <label><input type="checkbox" value="lamb"> Lamb</label>
+                        <label><input type="checkbox" value="fish"> Fish</label>
+                        <label><input type="checkbox" value="seafood"> Seafood</label>
+                        <label><input type="checkbox" value="shellfish"> Shellfish</label>
+                        <label><input type="checkbox" value="milk"> Dairy (milk/cheese)</label>
+                        <label><input type="checkbox" value="egg"> Eggs</label>
+                    </div>
+                </fieldset>
 
                 <fieldset>
                     <legend>Exclude meats (optional)</legend>
