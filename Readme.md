@@ -3,7 +3,7 @@ Eating well simplified for the everyday boilermaker.
 
 ## Inspiration
 
-boiler*gains* was inspired from our own struggles as college students to incorporate healthy food choices into our daily busy schedules. We noticed a lack of daily nutritional guidance for an average boilermaker with a meal plan. Yes, the Purdue Menus provides detailed nutritional values for every food item, but what if you do not have the time to toggle through 5 dining courts and every food item. Moreover, the importance of dietary choices in college is backed by many researchers. "University life is a critical period for establishing healthy eating habits and attitudes. However, university students are at risk of developing poor eating habits due to various factors, including **economic conditions, academic stress, and lack of information about nutritional concepts** ( AH;, A. N. N. W.-A., 15 Feb, 2024.). Addressing nutritional issues and eating behaviours among university students: A narrative review. Nutrition research reviews). 
+boiler*gains* was inspired from our own struggles as college students to incorporate healthy food choices into our daily busy schedules. We noticed a lack of daily nutritional guidance for an average boilermaker with a meal plan. Yes, the Purdue Menus provides detailed nutritional values for every food item, but what if you do not have the time to toggle through 5 dining courts and every food item. Moreover, the importance of dietary choices in college is backed by many researchers. "University life is a critical period for establishing healthy eating habits and attitudes. However, university students are at risk of developing poor eating habits due to various factors, including **economic conditions, academic stress, and lack of information about nutritional concepts** ( AH, A.N.N. W.-A., 15 Feb 2024). 
 
 So, we wanted to design an interactive website that could take nutritional info directly from the Purdue Menus website, your personal dietary preferences, and suggest meal ideas for any dining court.
 
@@ -32,4 +32,7 @@ Throughout the 24 hours we worked on boiler*gains*, we learned several things: h
 
 We plan to enhance boiler*gains* by using web scraping to build a dynamic database that updates daily with menu items, including meal period, ingredients, sodium, cholesterol, and other nutritional details. We want it to be more accessible by incorporating allergen-specific filters and offering nuanced dietary options such as vegetarian, halal, and other alternatives at each dining court. It should support niche options like make-your-own bars, salad stations, and sizzling pasta. Customization features such as selecting the number of meals per day, meal times, and saving room for dessert would make planning more flexible. Finally, a stronger combinatorial algorithm could better balance nutrition while supplementing the Purdue Dining Menus.
 
+
+References:
+AH;, A. N. N. W.-A. (15 Feb, 2024). Addressing nutritional issues and eating behaviours among university students: A narrative review. Nutrition research reviews. https://pubmed.ncbi.nlm.nih.gov/38356364/ 
 
