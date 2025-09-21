@@ -295,22 +295,21 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
     serving_step = max(0.1, float(serving_step))
 
     # helper: cap servings for very-high-protein items; default max 1 serving for items >20g protein
-    def max_servings_for_item(info: Dict[str, Any]) -> float:
+    def max_servings_for_item(info: Dict[str, Any]) -> int:
         base = float(max_servings)
         if info.get('protein', 0.0) > 20:
-            return min(base, 1.0)
-        return base
+            base = min(base, 1.0)
+        max_units = int(math.floor(base + 1e-9))
+        return max(1, max_units)
 
     def serving_values_for_item(info: Dict[str, Any]) -> List[float]:
         max_serv = max_servings_for_item(info)
-        if max_serv <= 0:
-            return []
-        steps = max(1, int(math.floor((max_serv + 1e-9) / serving_step)))
-        values = [round(serving_step * (i + 1), 2) for i in range(steps)]
-        # ensure the exact maximum is included if it is not already due to rounding
-        if values and abs(values[-1] - max_serv) > 1e-9 and max_serv - values[-1] >= 0.2 * serving_step:
-            values.append(round(max_serv, 2))
-        return values
+        return [float(i) for i in range(1, max_serv + 1)]
+
+    def _solution_signature(entry: Dict[str, Any]) -> Tuple[str, ...]:
+        items = entry.get('items', [])
+        names = sorted(name for name, _ in items)
+        return tuple(names)
 
     for tol in tolerances:
         low_cal = calorie_goal * (1 - tol)
@@ -343,13 +342,14 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                     total_fiber = 0.0
                     items = []
                     for name_i, s in zip(combo, servings):
+                        qty = float(int(round(s)))
                         info = foods[name_i]
-                        total_cal += info.get('calories', 0.0) * s
-                        total_pro += info.get('protein', 0.0) * s
-                        total_fat += info.get('fat', 0.0) * s
-                        total_carbs += info.get('carbs', 0.0) * s
-                        total_fiber += info.get('fiber', 0.0) * s
-                        items.append((name_i, s))
+                        total_cal += info.get('calories', 0.0) * qty
+                        total_pro += info.get('protein', 0.0) * qty
+                        total_fat += info.get('fat', 0.0) * qty
+                        total_carbs += info.get('carbs', 0.0) * qty
+                        total_fiber += info.get('fiber', 0.0) * qty
+                        items.append((name_i, qty))
 
                     # skip combos that violate simple pairing rules
                     if not pairs_ok(combo):
@@ -382,10 +382,22 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
         if best:
             break
 
-    # sort solutions and attach top alternatives
+    def _dedupe(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        best_by_sig: Dict[Tuple[str, ...], Dict[str, Any]] = {}
+        for entry in entries:
+            sig = _solution_signature(entry)
+            existing = best_by_sig.get(sig)
+            if existing is None or entry.get('score', float('inf')) < existing.get('score', float('inf')):
+                best_by_sig[sig] = entry
+        return list(best_by_sig.values())
+
+    solutions = _dedupe(solutions)
+    all_candidates = _dedupe(all_candidates)
+
     pool: List[Dict[str, Any]]
-    if best:
+    if solutions:
         pool = sorted(solutions, key=lambda x: x.get('score', float('inf')))
+        best = pool[0]
     else:
         pool = sorted(all_candidates, key=lambda x: x.get('score', float('inf')))
         if not pool:
@@ -393,15 +405,19 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
         best = pool[0]
 
     best_protein = best.get('total_protein', 0.0)
+    best_signature = _solution_signature(best)
+    seen_signatures = {best_signature}
     alternatives: List[Dict[str, Any]] = []
     for sol in pool:
         if sol is best:
             continue
-        if tuple(sol.get('items', [])) == tuple(best.get('items', [])):
+        sig = _solution_signature(sol)
+        if sig in seen_signatures:
             continue
         if abs(sol.get('total_protein', 0.0) - best_protein) > protein_window:
             continue
         alternatives.append(sol)
+        seen_signatures.add(sig)
         if len(alternatives) >= max_alternatives:
             break
 
@@ -415,17 +431,22 @@ def format_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]]) -> str:
     lines = []
     for name, servings in meal['items']:
         info = foods.get(name, {})
-        c = info.get('calories', 0.0) * servings
-        p = info.get('protein', 0.0) * servings
-        fat = info.get('fat', 0.0) * servings
-        carbs = info.get('carbs', 0.0) * servings
-        fiber = info.get('fiber', 0.0) * servings
+        qty = max(1, int(round(servings)))
+        c = info.get('calories', 0.0) * qty
+        p = info.get('protein', 0.0) * qty
+        fat = info.get('fat', 0.0) * qty
+        carbs = info.get('carbs', 0.0) * qty
+        fiber = info.get('fiber', 0.0) * qty
         serving_desc = info.get('serving') or '1 serving'
+        qty_label = 'serving' if qty == 1 else 'servings'
         lines.append(
-            f"{servings} x {name} ({serving_desc}) — {c:.0f} kcal, {p:.1f} g protein, {fat:.1f} g fat, {carbs:.1f} g carbs, {fiber:.1f} g fiber"
+            f"- {name} ({serving_desc}) — {c:.0f} kcal, {p:.1f} g protein, {fat:.1f} g fat, {carbs:.1f} g carbs, {fiber:.1f} g fiber"
+        )
+        lines.append(
+            f"  ({qty} {qty_label})"
         )
     lines.append(
-        f"Total: {meal['total_calories']:.0f} kcal, {meal['total_protein']:.1f} g protein, {meal.get('total_fat', 0.0):.1f} g fat, {meal.get('total_carbs', 0.0):.1f} g carbs, {meal.get('total_fiber', 0.0):.1f} g fiber (tol {meal['tolerance_used']*100:.0f}% )"
+        f"Total: {meal['total_calories']:.0f} kcal, {meal['total_protein']:.1f} g protein, {meal.get('total_fat', 0.0):.1f} g fat, {meal.get('total_carbs', 0.0):.1f} g carbs, {meal.get('total_fiber', 0.0):.1f} g fiber"
     )
     return '\n'.join(lines)
 

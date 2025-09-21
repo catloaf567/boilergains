@@ -135,31 +135,57 @@
             border-color: rgba(254, 249, 223, 0.5);
         }
 
-        .return-button {
-            background-color: rgba(205, 29, 60, 0.8);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(205, 29, 60, 0.6);
-            color: #fef9df;
-            padding: 15px 30px;
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin: 32px 0 0;
+        }
+
+        .action-button {
+            min-width: 200px;
+            padding: 14px 28px;
             font-size: 18px;
             font-family: "Times New Roman", Times, serif;
-            font-weight: bold;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin: 40px auto 0;
-            display: block;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border: 2px solid transparent;
         }
 
-        .return-button:hover {
-            background-color: rgba(205, 29, 60, 1);
+        .action-button.secondary {
+            background-color: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.35);
+            color: #fef9df;
+        }
+
+        .action-button.secondary:hover {
+            background-color: rgba(254, 249, 223, 0.25);
+            border-color: rgba(254, 249, 223, 0.5);
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(205, 29, 60, 0.4);
-            border-color: rgba(205, 29, 60, 0.8);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
         }
 
-        .return-button:active {
+        .action-button.secondary:active {
+            transform: translateY(0);
+        }
+
+        .action-button.primary {
+            background-color: rgba(205, 29, 60, 0.85);
+            border-color: rgba(205, 29, 60, 0.7);
+            color: #fef9df;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        .action-button.primary:hover {
+            background-color: rgba(205, 29, 60, 1);
+            border-color: rgba(205, 29, 60, 0.9);
+            transform: translateY(-3px);
+            box-shadow: 0 14px 32px rgba(205, 29, 60, 0.45);
+        }
+
+        .action-button.primary:active {
             transform: translateY(0);
         }
 
@@ -182,9 +208,9 @@
                 padding: 12px 15px;
             }
             
-            .return-button {
+            .action-button {
                 font-size: 16px;
-                padding: 12px 25px;
+                padding: 12px 24px;
             }
         }
 
@@ -240,16 +266,17 @@
             </div>
         </div>
         
-        <button class="return-button" id="backToRecommended">
-            Save & Return to Recommended Values
-        </button>
+        <div class="action-buttons">
+            <button type="button" class="action-button secondary" id="backToRecommendations">Back to Recommendations</button>
+            <button type="button" class="action-button primary" id="proceedToDining">Proceed to Dining Halls</button>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const backButton = document.getElementById('backToGoals');
-            if (backButton) {
-                backButton.addEventListener('click', () => {
+            const headerBackButton = document.getElementById('backToGoals');
+            if (headerBackButton) {
+                headerBackButton.addEventListener('click', () => {
                     window.location.href = 'Page3.html';
                 });
             }
@@ -290,21 +317,24 @@
                 }
             });
 
+            const readFormValues = () => ({
+                calories: Number(fields.calories && fields.calories.value) || 0,
+                protein: Number(fields.protein && fields.protein.value) || 0,
+                carbs: Number(fields.carbs && fields.carbs.value) || 0,
+                fat: Number(fields.fat && fields.fat.value) || 0,
+                fiber: Number(fields.fiber && fields.fiber.value) || 0
+            });
+
+            const persistGoals = () => {
+                sessionStorage.setItem('currentGoals', JSON.stringify(readFormValues()));
+            };
+
             let saveTimeout;
             const scheduleSave = () => {
                 if (saveTimeout) {
                     clearTimeout(saveTimeout);
                 }
-                saveTimeout = setTimeout(() => {
-                    const updated = {
-                        calories: Number(fields.calories && fields.calories.value) || 0,
-                        protein: Number(fields.protein && fields.protein.value) || 0,
-                        carbs: Number(fields.carbs && fields.carbs.value) || 0,
-                        fat: Number(fields.fat && fields.fat.value) || 0,
-                        fiber: Number(fields.fiber && fields.fiber.value) || 0
-                    };
-                    sessionStorage.setItem('currentGoals', JSON.stringify(updated));
-                }, 400);
+                saveTimeout = setTimeout(persistGoals, 400);
             };
 
             Object.values(fields).forEach((input) => {
@@ -312,10 +342,20 @@
                 input.addEventListener('input', scheduleSave);
             });
 
-            const backButton = document.getElementById('backToRecommended');
-            if (backButton) {
-                backButton.addEventListener('click', () => {
+            const backToRecommendationsBtn = document.getElementById('backToRecommendations');
+            if (backToRecommendationsBtn) {
+                backToRecommendationsBtn.addEventListener('click', () => {
+                    persistGoals();
                     window.location.href = 'Page3.html';
+                });
+            }
+
+            const proceedToDiningBtn = document.getElementById('proceedToDining');
+            if (proceedToDiningBtn) {
+                proceedToDiningBtn.addEventListener('click', () => {
+                    persistGoals();
+                    sessionStorage.setItem('useCustomGoals', 'true');
+                    window.location.href = 'Page4.html';
                 });
             }
         });
