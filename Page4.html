@@ -26,6 +26,15 @@
             justify-content: space-between;
         }
 
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        a:visited {
+            color: inherit;
+        }
+
         .main-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -426,7 +435,7 @@
     <div class="bottom-info">
         <div class="date-info">Date: 22 September</div>
         <div class="meal-info">Meal Period: Lunch</div>
-        <pre id="suggestionOutput" style="margin-top: 25px; white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; color: #fef9df;"></pre>
+        <div id="suggestionOutput" style="margin-top: 25px; font-family: 'Times New Roman', Times, serif; color: #fef9df;"></div>
     </div>
 
     <script>
@@ -439,31 +448,60 @@
         };
 
         const suggestionOutput = document.getElementById('suggestionOutput');
+        const buildApiCandidates = () => {
+            const seen = new Set();
+            const candidates = [];
+            const add = (value) => {
+                if (!value || seen.has(value)) return;
+                candidates.push(value);
+                seen.add(value);
+            };
 
-        const renderSuggestion = (hallLabel, data) => {
-            if (!suggestionOutput) return;
-            if (!data || !data.success) {
-                suggestionOutput.textContent = '';
-                return;
+            add(sessionStorage.getItem('apiBase'));
+            const { origin, protocol } = window.location;
+            if (protocol !== 'file:' && origin && origin !== 'null') {
+                add(origin);
             }
+            add('http://127.0.0.1:5050');
+            add('http://127.0.0.1:5000');
+            add('http://localhost:5050');
+            add('http://localhost:5000');
+            return candidates;
+        };
 
-            const strings = [];
-            strings.push(`${hallLabel} • Meal suggestion`);
-
-            const options = Array.isArray(data.options) ? data.options : [];
-            if (options.length) {
-                options.forEach((opt) => {
-                    const label = opt.label || 'Option';
-                    const text = opt.text || '';
-                    strings.push('');
-                    strings.push(`${label}`);
-                    strings.push(text.trim());
-                });
-            } else if (data.text) {
-                strings.push('');
-                strings.push(data.text.trim());
+        const postJson = async (path, payload) => {
+            const attempts = [];
+            for (const base of buildApiCandidates()) {
+                try {
+                    const response = await fetch(`${base}${path}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const contentType = (response.headers && response.headers.get && response.headers.get('Content-Type')) || '';
+                    let data = null;
+                    if (contentType.includes('application/json')) {
+                        try {
+                            data = await response.json();
+                        } catch (jsonError) {
+                            attempts.push({ base, message: `Invalid JSON response (${jsonError})` });
+                            continue;
+                        }
+                    }
+                    if (!response.ok) {
+                        const message = data && data.error ? data.error : `HTTP ${response.status}`;
+                        attempts.push({ base, message });
+                        continue;
+                    }
+                    sessionStorage.setItem('apiBase', base);
+                    return data || {};
+                } catch (error) {
+                    attempts.push({ base, message: error && error.message ? error.message : String(error) });
+                }
             }
-            suggestionOutput.textContent = strings.join('\n');
+            const error = new Error('Unable to contact the meal planner server.');
+            error.attempts = attempts;
+            throw error;
         };
 
         window.selectDiningHall = async (hall) => {
@@ -514,13 +552,8 @@
             };
 
             try {
-                const response = await fetch('/suggest', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await response.json();
-                if (!response.ok || !data.success) {
+                const data = await postJson('/suggest', payload);
+                if (!data.success) {
                     const message = (data && data.error) ? data.error : 'No matching meal found.';
                     if (suggestionOutput) {
                         suggestionOutput.textContent = message;
@@ -530,7 +563,6 @@
                 }
 
                 const hallLabel = hall.charAt(0).toUpperCase() + hall.slice(1) + ' Dining Court';
-                renderSuggestion(hallLabel, data);
 
                 sessionStorage.setItem('suggestionContext', JSON.stringify({
                     hall,
@@ -541,12 +573,20 @@
                     goals
                 }));
                 sessionStorage.setItem('lastSuggestion', JSON.stringify(data));
+
+                if (suggestionOutput) {
+                    suggestionOutput.textContent = 'Redirecting to your meal results...';
+                }
+                window.location.href = 'Page6.html';
             } catch (error) {
                 console.error('Meal suggestion failed', error);
                 if (suggestionOutput) {
                     suggestionOutput.textContent = 'Request failed. Please try again.';
                 }
-                alert('Failed to contact the server. Please try again.');
+                const attempts = error && Array.isArray(error.attempts) && error.attempts.length
+                    ? '\nAttempts:\n' + error.attempts.map((a) => `- ${a.base}: ${a.message}`).join('\n')
+                    : '';
+                alert(`Failed to contact the server. Please ensure the backend is running.${attempts}`);
             }
         };
 
@@ -585,7 +625,6 @@
             const contextRaw = sessionStorage.getItem('suggestionContext');
             if (storedSuggestion && contextRaw) {
                 try {
-                    const suggestion = JSON.parse(storedSuggestion);
                     const context = JSON.parse(contextRaw);
                     if (context && context.vegan && veganSelect) {
                         veganSelect.value = 'yes';
@@ -604,8 +643,15 @@
                             }
                         });
                     }
-                    const hallLabel = context && context.hallLabel ? context.hallLabel : 'Dining Hall';
-                    renderSuggestion(hallLabel, suggestion);
+                    if (suggestionOutput) {
+                        suggestionOutput.innerHTML = 'Latest meal suggestion saved. <button id="openResults" style="margin-left: 10px; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(254, 249, 223, 0.4); background: rgba(254, 249, 223, 0.15); color: #fef9df; cursor: pointer;">View Results</button>';
+                        const openBtn = document.getElementById('openResults');
+                        if (openBtn) {
+                            openBtn.addEventListener('click', () => {
+                                window.location.href = 'Page6.html';
+                            });
+                        }
+                    }
                 } catch (err) {
                     console.error('Failed to restore previous suggestion', err);
                 }
