@@ -10,11 +10,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const activitySelect = document.getElementById('activity');
   const calorieInput = document.getElementById('calorie');
   const proteinInput = document.getElementById('protein');
+  const carbsInput = document.getElementById('carbs');
+  const fatInput = document.getElementById('fat');
+  const fiberInput = document.getElementById('fiber');
   const useRecommendedBtn = document.getElementById('useRecommended');
   const editGoalsBtn = document.getElementById('editGoals');
   const goalMessage = document.getElementById('goalMessage');
   const dailyTotals = document.getElementById('dailyTotals');
   const datasetButtons = document.querySelectorAll('.dataset-option');
+  const datasetError = document.getElementById('datasetError');
   let goalsLocked = false;
   let selectedDatasetPath = (() => {
     if (!datasetButtons || datasetButtons.length === 0) {
@@ -30,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
       datasetButtons.forEach((other) => {
         other.classList.toggle('active', other === btn);
       });
+      if (datasetError) {
+        datasetError.textContent = '';
+      }
     });
   });
 
@@ -46,6 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
     goalsLocked = locked;
     calorieInput.disabled = locked;
     proteinInput.disabled = locked;
+    if (carbsInput) carbsInput.disabled = locked;
+    if (fatInput) fatInput.disabled = locked;
+    if (fiberInput) fiberInput.disabled = locked;
     if (editGoalsBtn) editGoalsBtn.disabled = !locked;
   };
 
@@ -118,18 +128,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const perMealCalories = data.calorie_goal || 0;
         const perMealProtein = data.protein_goal || 0;
+        const perMealCarbs = data.carb_goal || 0;
+        const perMealFat = data.fat_goal || 0;
+        const perMealFiber = data.fiber_goal || 0;
         const dailyCalories = data.daily_calorie_goal || perMealCalories;
         const dailyProtein = data.daily_protein_goal || perMealProtein;
+        const dailyCarbs = data.daily_carb_goal || perMealCarbs;
+        const dailyFat = data.daily_fat_goal || perMealFat;
+        const dailyFiber = data.daily_fiber_goal || perMealFiber;
         const mealsPerDay = data.meals_per_day || 3;
 
         calorieInput.value = Math.round(perMealCalories);
         proteinInput.value = Math.round(perMealProtein);
+        if (carbsInput) carbsInput.value = Math.round(perMealCarbs);
+        if (fatInput) fatInput.value = Math.round(perMealFat);
+        if (fiberInput) fiberInput.value = Math.round(perMealFiber);
         lockGoals(true);
 
         setGoalMessage(
-          `Recommended target for this meal (assuming ${mealsPerDay} meals/day): ${Math.round(perMealCalories)} kcal & ${Math.round(perMealProtein)} g protein (daily estimate: ${Math.round(dailyCalories)} kcal, ${Math.round(dailyProtein)} g).`
+          `Recommended target for this meal (assuming ${mealsPerDay} meals/day): ${Math.round(perMealCalories)} kcal, ${Math.round(perMealProtein)} g protein, ${Math.round(perMealCarbs)} g carbs, ${Math.round(perMealFat)} g fat, ${Math.round(perMealFiber)} g fiber (daily estimate: ${Math.round(dailyCalories)} kcal, ${Math.round(dailyProtein)} g protein, ${Math.round(dailyCarbs)} g carbs, ${Math.round(dailyFat)} g fat, ${Math.round(dailyFiber)} g fiber).`
         );
-        setDailyTotals(`Daily requirement: ${Math.round(dailyCalories)} kcal & ${Math.round(dailyProtein)} g protein.`);
+        setDailyTotals(`Daily requirement: ${Math.round(dailyCalories)} kcal, ${Math.round(dailyProtein)} g protein, ${Math.round(dailyCarbs)} g carbs, ${Math.round(dailyFat)} g fat, ${Math.round(dailyFiber)} g fiber.`);
       } catch (err) {
         setGoalMessage(`Failed to fetch recommendations: ${err}`, true);
         setDailyTotals('');
@@ -149,6 +168,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (datasetError) {
+      datasetError.textContent = '';
+    }
+
+    if (!selectedDatasetPath) {
+      if (datasetError) {
+        datasetError.textContent = 'Please select a dining court.';
+      }
+      return;
+    }
+
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
     result.textContent = 'Working...';
 
     const isVegan = veganSelect.value === 'true';
@@ -159,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const payload = {
       calorie_goal: Number(calorieInput.value) || 0,
       protein_goal: Number(proteinInput.value) || 0,
+      carb_goal: Number(carbsInput && carbsInput.value) || 0,
+      fat_goal: Number(fatInput && fatInput.value) || 0,
+      fiber_goal: Number(fiberInput && fiberInput.value) || 0,
       vegan: isVegan,
       excluded_items: excludedItems,
       path: selectedDatasetPath

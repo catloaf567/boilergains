@@ -21,6 +21,7 @@
                 <fieldset class="dataset-group" aria-labelledby="datasetLegend">
                     <legend id="datasetLegend">Select dining court</legend>
                     <p class="note">Choose a dataset (defaults to Windsor).</p>
+                    <p id="datasetError" class="goal-message error" role="alert" aria-live="assertive"></p>
                     <div class="dataset-options" role="group" aria-label="Dining court datasets">
                         <button type="button" class="dataset-option active" data-path="Windsor-20250922.xlsx">Windsor</button>
                         <button type="button" class="dataset-option" data-path="EarhartLunch20250922.xlsx">Earhart</button>
@@ -33,23 +34,23 @@
                 <fieldset class="demographics" aria-labelledby="demographicsLegend">
                     <legend id="demographicsLegend">Your details</legend>
                     <label>Age
-                        <input type="number" id="age" name="age" min="1" max="120" placeholder="Years">
+                        <input type="number" id="age" name="age" min="1" max="120" placeholder="Years" required>
                     </label>
                     <label>Gender
-                        <select id="gender" name="gender">
+                        <select id="gender" name="gender" required>
                             <option value="unspecified" selected>Prefer not to say</option>
                             <option value="female">Female</option>
                             <option value="male">Male</option>
                         </select>
                     </label>
                     <label>Height (cm)
-                        <input type="number" id="height" name="height" min="90" max="250" placeholder="cm">
+                        <input type="number" id="height" name="height" min="90" max="250" placeholder="cm" required>
                     </label>
                     <label>Weight (kg)
-                        <input type="number" id="weight" name="weight" min="30" max="250" placeholder="kg">
+                        <input type="number" id="weight" name="weight" min="30" max="250" placeholder="kg" required>
                     </label>
                     <label>Activity level
-                        <select id="activity" name="activity">
+                        <select id="activity" name="activity" required>
                             <option value="sedentary" selected>Sedentary (little exercise)</option>
                             <option value="light">Light (1-2 days/week)</option>
                             <option value="moderate">Moderate (3-5 days/week)</option>
@@ -71,6 +72,15 @@
 
                     <label>Protein goal (g):
                         <input type="number" id="protein" name="protein" value="70" required>
+                    </label>
+                    <label>Carbohydrate goal (g):
+                        <input type="number" id="carbs" name="carbs" value="0">
+                    </label>
+                    <label>Fat goal (g):
+                        <input type="number" id="fat" name="fat" value="0">
+                    </label>
+                    <label>Fiber goal (g):
+                        <input type="number" id="fiber" name="fiber" value="0">
                     </label>
                     <p id="goalMessage" class="goal-message" role="status" aria-live="polite"></p>
                     <p id="dailyTotals" class="goal-message secondary" role="status" aria-live="polite"></p>
