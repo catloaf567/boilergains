@@ -440,7 +440,7 @@ def format_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]]) -> str:
         serving_desc = info.get('serving') or '1 serving'
         qty_label = 'serving' if qty == 1 else 'servings'
         lines.append(
-            f"- <strong>{name}</strong> ({serving_desc}, {qty} {qty_label}) — {c:.0f} kcal, {p:.1f} g protein, {fat:.1f} g fat, {carbs:.1f} g carbs, {fiber:.1f} g fiber"
+            f"- {name} ({serving_desc}, {qty} {qty_label}) — {c:.0f} kcal, {p:.1f} g protein, {fat:.1f} g fat, {carbs:.1f} g carbs, {fiber:.1f} g fiber"
         )
     lines.append(
         f"Total: {meal['total_calories']:.0f} kcal, {meal['total_protein']:.1f} g protein, {meal.get('total_fat', 0.0):.1f} g fat, {meal.get('total_carbs', 0.0):.1f} g carbs, {meal.get('total_fiber', 0.0):.1f} g fiber"
