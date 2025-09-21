@@ -210,18 +210,78 @@
             </div>
         </div>
         
-        <button class="back-button" onclick="goBackToRecommended()">
+        <button class="back-button" id="backToRecommended">
             Back to the Recommended Values
         </button>
     </div>
 
     <script>
-        function goBackToRecommended() {
-            console.log('Going back to recommended values');
-            // Add your navigation logic here
-            // Example: window.location.href = 'recommended.html';
-            alert('Navigating back to recommended values...');
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const fields = {
+                calories: document.getElementById('calories'),
+                protein: document.getElementById('protein'),
+                carbs: document.getElementById('carbohydrates'),
+                fat: document.getElementById('fats'),
+                fiber: document.getElementById('fiber')
+            };
+
+            const parseGoals = (raw) => {
+                if (!raw) return null;
+                try {
+                    return JSON.parse(raw);
+                } catch (error) {
+                    console.error('Failed to parse stored goals', error);
+                    return null;
+                }
+            };
+
+            const storedCurrent = parseGoals(sessionStorage.getItem('currentGoals'));
+            const storedNutrition = parseGoals(sessionStorage.getItem('nutritionGoals'));
+            const defaults = storedCurrent || (storedNutrition && storedNutrition.perMeal) || {
+                calories: '',
+                protein: '',
+                carbs: '',
+                fat: '',
+                fiber: ''
+            };
+
+            Object.entries(fields).forEach(([key, input]) => {
+                if (!input) return;
+                const value = defaults && defaults[key];
+                if (value !== undefined && value !== null && value !== '') {
+                    input.value = Math.round(Number(value));
+                }
+            });
+
+            let saveTimeout;
+            const scheduleSave = () => {
+                if (saveTimeout) {
+                    clearTimeout(saveTimeout);
+                }
+                saveTimeout = setTimeout(() => {
+                    const updated = {
+                        calories: Number(fields.calories && fields.calories.value) || 0,
+                        protein: Number(fields.protein && fields.protein.value) || 0,
+                        carbs: Number(fields.carbs && fields.carbs.value) || 0,
+                        fat: Number(fields.fat && fields.fat.value) || 0,
+                        fiber: Number(fields.fiber && fields.fiber.value) || 0
+                    };
+                    sessionStorage.setItem('currentGoals', JSON.stringify(updated));
+                }, 400);
+            };
+
+            Object.values(fields).forEach((input) => {
+                if (!input) return;
+                input.addEventListener('input', scheduleSave);
+            });
+
+            const backButton = document.getElementById('backToRecommended');
+            if (backButton) {
+                backButton.addEventListener('click', () => {
+                    window.location.href = 'Page3.html';
+                });
+            }
+        });
     </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 
-from flask import Flask, request, send_from_directory, jsonify
+from flask import Flask, request, send_from_directory, jsonify, redirect
 import os
 import traceback
 from typing import Tuple
@@ -33,7 +33,8 @@ except Exception as e:
 
 @app.route('/')
 def index():
-    return send_from_directory('.', 'index.html')
+    # Redirect root to the new landing page without breaking direct asset links
+    return redirect('/Page1.html')
 
 
 @app.route('/<path:filename>')

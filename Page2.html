@@ -166,26 +166,107 @@
                 </select>
             </div>
 
-            <button type="submit" class="submit-btn"><a href="Page3.html">Continue</a></button>
+            <button type="submit" class="submit-btn" id="submitBtn">Continue</button>
         </form>
     </div>
 
     <script>
-        document.getElementById('userInfoForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = {
-                age: formData.get('age'),
-                gender: formData.get('gender'),
-                height: formData.get('height'),
-                weight: formData.get('weight')
-            };
-            
-            console.log('User data:', data);
-            
-            // You can process the data here or send it to your backend
-            alert('Information submitted! Data logged to console.');
+        const form = document.getElementById('userInfoForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        const activityMap = {
+            'build-muscle': 'active',
+            'lose-weight': 'light',
+            'maintain-health': 'moderate'
+        };
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            if (submitBtn) {
+                submitBtn.disabled = true;
+            }
+
+            const age = Number(formData.get('age'));
+            const genderRaw = formData.get('gender') || 'prefer-not-to-say';
+            const gender = (genderRaw === 'male' || genderRaw === 'female') ? genderRaw : 'unspecified';
+            const heightInches = Number(formData.get('height'));
+            const weightPounds = Number(formData.get('weight'));
+            const goal = formData.get('goal') || '';
+
+            const heightCm = Number.isFinite(heightInches) ? heightInches * 2.54 : 0;
+            const weightKg = Number.isFinite(weightPounds) ? weightPounds / 2.20462 : 0;
+            const activityLevel = activityMap[goal] || 'sedentary';
+
+            try {
+                const response = await fetch('/recommend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        age,
+                        height_cm: heightCm,
+                        weight_kg: weightKg,
+                        gender,
+                        activity_level: activityLevel
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    const message = data && data.error ? data.error : 'Could not calculate recommendations. Please try again.';
+                    alert(message);
+                    return;
+                }
+
+                const nutritionGoals = {
+                    perMeal: {
+                        calories: data.calorie_goal,
+                        protein: data.protein_goal,
+                        carbs: data.carb_goal,
+                        fat: data.fat_goal,
+                        fiber: data.fiber_goal
+                    },
+                    daily: {
+                        calories: data.daily_calorie_goal,
+                        protein: data.daily_protein_goal,
+                        carbs: data.daily_carb_goal,
+                        fat: data.daily_fat_goal,
+                        fiber: data.daily_fiber_goal
+                    },
+                    mealsPerDay: data.meals_per_day
+                };
+
+                const userProfile = {
+                    age,
+                    gender,
+                    genderRaw,
+                    heightInches,
+                    weightPounds,
+                    goal,
+                    activityLevel
+                };
+
+                sessionStorage.setItem('nutritionGoals', JSON.stringify(nutritionGoals));
+                sessionStorage.setItem('currentGoals', JSON.stringify(nutritionGoals.perMeal));
+                sessionStorage.setItem('userProfile', JSON.stringify(userProfile));
+                sessionStorage.removeItem('suggestionContext');
+                sessionStorage.removeItem('lastSuggestion');
+
+                window.location.href = 'Page3.html';
+            } catch (error) {
+                console.error('Failed to fetch recommendations', error);
+                alert('Failed to fetch recommendations. Please check your connection and try again.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            }
         });
     </script>
 </body>

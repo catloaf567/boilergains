@@ -426,34 +426,190 @@
     <div class="bottom-info">
         <div class="date-info">Date: 22 September</div>
         <div class="meal-info">Meal Period: Lunch</div>
+        <pre id="suggestionOutput" style="margin-top: 25px; white-space: pre-wrap; font-family: 'Times New Roman', Times, serif; color: #fef9df;"></pre>
     </div>
 
     <script>
-        function selectDiningHall(hall) {
-            console.log('Selected dining hall:', hall);
-            // Add your navigation logic here
-            // Example: window.location.href = 'menu.html?hall=' + hall;
-            alert('Selected: ' + hall.charAt(0).toUpperCase() + hall.slice(1) + ' Dining Court');
-        }
+        const hallDatasetMap = {
+            windsor: 'Windsor-20250922.xlsx',
+            wiley: 'WileyLunch20250922.xlsx',
+            ford: 'FordLunch20250922.xlsx',
+            earhart: 'EarhartLunch20250922.xlsx',
+            hillenbrand: 'HillenbrandLunch20250922.xlsx'
+        };
+
+        const suggestionOutput = document.getElementById('suggestionOutput');
+
+        const renderSuggestion = (hallLabel, data) => {
+            if (!suggestionOutput) return;
+            if (!data || !data.success) {
+                suggestionOutput.textContent = '';
+                return;
+            }
+
+            const strings = [];
+            strings.push(`${hallLabel} • Meal suggestion`);
+
+            const options = Array.isArray(data.options) ? data.options : [];
+            if (options.length) {
+                options.forEach((opt) => {
+                    const label = opt.label || 'Option';
+                    const text = opt.text || '';
+                    strings.push('');
+                    strings.push(`${label}`);
+                    strings.push(text.trim());
+                });
+            } else if (data.text) {
+                strings.push('');
+                strings.push(data.text.trim());
+            }
+            suggestionOutput.textContent = strings.join('\n');
+        };
+
+        window.selectDiningHall = async (hall) => {
+            const datasetPath = hallDatasetMap[hall];
+            if (!datasetPath) {
+                alert('Dataset not available for this dining hall yet.');
+                return;
+            }
+
+            const storedGoals = sessionStorage.getItem('currentGoals') || sessionStorage.getItem('nutritionGoals');
+            if (!storedGoals) {
+                alert('Please complete your recommendations first.');
+                window.location.href = 'Page2.html';
+                return;
+            }
+
+            let goals;
+            try {
+                goals = JSON.parse(storedGoals);
+                if (goals.perMeal) {
+                    goals = goals.perMeal;
+                }
+            } catch (err) {
+                console.error('Unable to parse stored goals', err);
+                alert('Something went wrong with your saved targets. Please re-enter your information.');
+                window.location.href = 'Page2.html';
+                return;
+            }
+
+            const veganSelect = document.getElementById('vegan-select');
+            const vegan = veganSelect && veganSelect.value === 'yes';
+            const excludeCheckboxes = Array.from(document.querySelectorAll('input[name="exclude"]:checked'));
+            const excludedItems = vegan ? [] : excludeCheckboxes.map((cb) => cb.value);
+
+            if (suggestionOutput) {
+                suggestionOutput.textContent = 'Fetching meal suggestion...';
+            }
+
+            const payload = {
+                calorie_goal: Number(goals.calories) || 0,
+                protein_goal: Number(goals.protein) || 0,
+                carb_goal: Number(goals.carbs) || 0,
+                fat_goal: Number(goals.fat) || 0,
+                fiber_goal: Number(goals.fiber) || 0,
+                vegan,
+                excluded_items: excludedItems,
+                path: datasetPath
+            };
+
+            try {
+                const response = await fetch('/suggest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    const message = (data && data.error) ? data.error : 'No matching meal found.';
+                    if (suggestionOutput) {
+                        suggestionOutput.textContent = message;
+                    }
+                    alert(message);
+                    return;
+                }
+
+                const hallLabel = hall.charAt(0).toUpperCase() + hall.slice(1) + ' Dining Court';
+                renderSuggestion(hallLabel, data);
+
+                sessionStorage.setItem('suggestionContext', JSON.stringify({
+                    hall,
+                    hallLabel,
+                    vegan,
+                    excludedItems,
+                    datasetPath,
+                    goals
+                }));
+                sessionStorage.setItem('lastSuggestion', JSON.stringify(data));
+            } catch (error) {
+                console.error('Meal suggestion failed', error);
+                if (suggestionOutput) {
+                    suggestionOutput.textContent = 'Request failed. Please try again.';
+                }
+                alert('Failed to contact the server. Please try again.');
+            }
+        };
 
         // Handle vegan dropdown change
         document.addEventListener('DOMContentLoaded', function() {
             const veganSelect = document.getElementById('vegan-select');
             const excludeCheckboxes = document.querySelectorAll('input[name="exclude"]');
 
-            veganSelect.addEventListener('change', function() {
-                if (this.value === 'yes') {
-                    // Check all exclude checkboxes
+            if (veganSelect) {
+                const toggleCheckboxState = (isVegan) => {
                     excludeCheckboxes.forEach(checkbox => {
-                        checkbox.checked = true;
+                        if (isVegan) {
+                            checkbox.checked = true;
+                            checkbox.disabled = true;
+                        } else {
+                            checkbox.disabled = false;
+                        }
                     });
-                } else {
-                    // Uncheck all exclude checkboxes
-                    excludeCheckboxes.forEach(checkbox => {
-                        checkbox.checked = false;
-                    });
+                    if (!isVegan) {
+                        excludeCheckboxes.forEach(checkbox => {
+                            checkbox.checked = false;
+                        });
+                    }
+                };
+
+                veganSelect.addEventListener('change', function() {
+                    if (this.value === 'yes') {
+                        toggleCheckboxState(true);
+                    } else {
+                        toggleCheckboxState(false);
+                    }
+                });
+            }
+
+            const storedSuggestion = sessionStorage.getItem('lastSuggestion');
+            const contextRaw = sessionStorage.getItem('suggestionContext');
+            if (storedSuggestion && contextRaw) {
+                try {
+                    const suggestion = JSON.parse(storedSuggestion);
+                    const context = JSON.parse(contextRaw);
+                    if (context && context.vegan && veganSelect) {
+                        veganSelect.value = 'yes';
+                        veganSelect.dispatchEvent(new Event('change'));
+                    } else if (veganSelect) {
+                        veganSelect.dispatchEvent(new Event('change'));
+                    }
+                    if (context && Array.isArray(context.excludedItems) && context.excludedItems.length) {
+                        context.excludedItems.forEach((value) => {
+                            const checkbox = document.querySelector(`input[name="exclude"][value="${value}"]`);
+                            if (checkbox) {
+                                checkbox.checked = true;
+                                if (!context.vegan) {
+                                    checkbox.disabled = false;
+                                }
+                            }
+                        });
+                    }
+                    const hallLabel = context && context.hallLabel ? context.hallLabel : 'Dining Hall';
+                    renderSuggestion(hallLabel, suggestion);
+                } catch (err) {
+                    console.error('Failed to restore previous suggestion', err);
                 }
-            });
+            }
         });
     </script>
 </body>

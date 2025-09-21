@@ -169,41 +169,44 @@
         <p class="subtitle">Based on your profile, here are your personalized nutrition targets</p>
         
         <div class="calories-display">
-            <div class="calories-text">Total Calories: 2,200 kcal per day</div>
+            <div class="calories-text">Total Calories: <span id="dailyCalories">2,200</span> kcal per day</div>
+            <div class="calories-text" style="font-size: 18px; margin-top: 10px;">
+                Per meal target: <span id="perMealCalories">733</span> kcal (assuming <span id="mealsPerDay">3</span> meals/day)
+            </div>
         </div>
 
         <div class="custom-input-section">
-            <button class="custom-btn" onclick="handleCustomInput()"><a href="Page4.html">Proceed</a></button>
+            <button class="custom-btn" id="proceedBtn">Proceed</button>
         </div>
 
         
         <div class="recommendations-grid">
             <div class="nutrition-card">
                 <div class="nutrition-label">Protein</div>
-                <div class="nutrition-value">110</div>
+                <div class="nutrition-value"><span id="dailyProtein">110</span></div>
                 <div class="nutrition-unit">grams per day</div>
-                <div class="nutrition-description">Essential for muscle maintenance and growth, approximately 0.8-1g per lb body weight</div>
+                <div class="nutrition-description">Essential for muscle maintenance and growth. Per meal target: <span id="perMealProtein">37</span> g.</div>
             </div>
 
             <div class="nutrition-card">
                 <div class="nutrition-label">Fats</div>
-                <div class="nutrition-value">73</div>
+                <div class="nutrition-value"><span id="dailyFat">73</span></div>
                 <div class="nutrition-unit">grams per day</div>
-                <div class="nutrition-description">Healthy fats for hormone production and nutrient absorption (30% of calories)</div>
+                <div class="nutrition-description">Healthy fats for hormone production and nutrient absorption. Per meal target: <span id="perMealFat">24</span> g.</div>
             </div>
 
             <div class="nutrition-card">
                 <div class="nutrition-label">Carbohydrates</div>
-                <div class="nutrition-value">248</div>
+                <div class="nutrition-value"><span id="dailyCarbs">248</span></div>
                 <div class="nutrition-unit">grams per day</div>
-                <div class="nutrition-description">Primary energy source for brain and muscles (45% of calories)</div>
+                <div class="nutrition-description">Primary energy source for brain and muscles. Per meal target: <span id="perMealCarbs">83</span> g.</div>
             </div>
 
             <div class="nutrition-card">
                 <div class="nutrition-label">Fiber</div>
-                <div class="nutrition-value">28</div>
+                <div class="nutrition-value"><span id="dailyFiber">28</span></div>
                 <div class="nutrition-unit">grams per day</div>
-                <div class="nutrition-description">Supports digestive health and helps maintain stable blood sugar levels</div>
+                <div class="nutrition-description">Supports digestive health and helps maintain stable blood sugar levels. Per meal target: <span id="perMealFiber">9</span> g.</div>
             </div>
 
   
@@ -212,21 +215,78 @@
 
         <div class="custom-input-section">
             <div class="or-text">Don't like these recommendations?</div>
-            <button class="custom-btn" onclick="handleCustomInput()"><a href="Page5.html">Input Your Own!</a></button>
+            <button class="custom-btn" id="customBtn">Input Your Own!</button>
         </div>
     </div>
 
     <script>
-        function handleCustomInput() {
-            console.log('Custom input button clicked');
-            // Add your navigation logic here
-            // Example: window.location.href = 'custom-input.html';
-        }
+        const safeRound = (value) => {
+            if (value === null || value === undefined || Number.isNaN(Number(value))) {
+                return 0;
+            }
+            return Math.round(Number(value));
+        };
 
-    
-        // You could add logic here to calculate recommendations based on user data
-        // For now, showing example values
-        console.log('Nutrition recommendations page loaded');
+        const updateText = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = safeRound(value);
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const storedGoals = sessionStorage.getItem('nutritionGoals');
+            if (!storedGoals) {
+                alert('Please provide your information first.');
+                window.location.href = 'Page2.html';
+                return;
+            }
+
+            let nutritionGoals;
+            try {
+                nutritionGoals = JSON.parse(storedGoals);
+            } catch (err) {
+                console.error('Failed to parse stored goals', err);
+                sessionStorage.removeItem('nutritionGoals');
+                alert('Something went wrong. Please enter your information again.');
+                window.location.href = 'Page2.html';
+                return;
+            }
+
+            const daily = nutritionGoals.daily || {};
+            const perMeal = nutritionGoals.perMeal || {};
+            const mealsPerDay = nutritionGoals.mealsPerDay || 3;
+
+            updateText('dailyCalories', daily.calories);
+            updateText('dailyProtein', daily.protein);
+            updateText('dailyCarbs', daily.carbs);
+            updateText('dailyFat', daily.fat);
+            updateText('dailyFiber', daily.fiber);
+
+            updateText('perMealCalories', perMeal.calories || (daily.calories && daily.calories / mealsPerDay));
+            updateText('perMealProtein', perMeal.protein || (daily.protein && daily.protein / mealsPerDay));
+            updateText('perMealCarbs', perMeal.carbs || (daily.carbs && daily.carbs / mealsPerDay));
+            updateText('perMealFat', perMeal.fat || (daily.fat && daily.fat / mealsPerDay));
+            updateText('perMealFiber', perMeal.fiber || (daily.fiber && daily.fiber / mealsPerDay));
+            updateText('mealsPerDay', mealsPerDay);
+
+            sessionStorage.setItem('currentGoals', JSON.stringify(perMeal));
+
+            const proceedBtn = document.getElementById('proceedBtn');
+            if (proceedBtn) {
+                proceedBtn.addEventListener('click', () => {
+                    window.location.href = 'Page4.html';
+                });
+            }
+
+            const customBtn = document.getElementById('customBtn');
+            if (customBtn) {
+                customBtn.addEventListener('click', () => {
+                    sessionStorage.setItem('useCustomGoals', 'true');
+                    window.location.href = 'Page5.html';
+                });
+            }
+        });
     </script>
 </body>
 </html>
