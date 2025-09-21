@@ -235,14 +235,44 @@
         }
 
         .checkbox-item input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            accent-color: #cd1d3c;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border: 2px solid rgba(254, 249, 223, 0.7);
+            background-color: rgba(0, 0, 0, 0.2);
             cursor: pointer;
+            position: relative;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+
+        .checkbox-item input[type="checkbox"]:focus-visible {
+            outline: 2px solid #fef9df;
+            outline-offset: 2px;
+        }
+
+        .checkbox-item input[type="checkbox"]::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -55%);
+            font-size: 16px;
+            color: transparent;
+            transition: color 0.2s ease;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked {
+            background-color: #cd1d3c;
+            border-color: #cd1d3c;
+        }
+
+        .checkbox-item input[type="checkbox"]:checked::after {
+            content: '\2714';
+            color: #fef9df;
         }
 
         .checkbox-item input[type="checkbox"]:disabled {
-            accent-color: #cd1d3c;
             opacity: 1;
             cursor: not-allowed;
         }
@@ -250,6 +280,28 @@
         .checkbox-item.vegan-locked {
             background-color: rgba(205, 29, 60, 0.15);
             border-color: rgba(205, 29, 60, 0.4);
+        }
+
+        .checkbox-item input[type="checkbox"].vegan-locked {
+            border-color: #cd1d3c;
+            background-color: rgba(205, 29, 60, 0.15);
+        }
+
+        .checkbox-item input[type="checkbox"].vegan-locked:checked {
+            background-color: #cd1d3c;
+            border-color: #cd1d3c;
+        }
+
+        .checkbox-item input[type="checkbox"].vegan-locked:checked::after {
+            color: #fef9df;
+        }
+
+        .checkbox-item input[type="checkbox"].vegan-locked:focus-visible {
+            outline-color: #cd1d3c;
+        }
+
+        .checkbox-item input[type="checkbox"]:disabled:not(:checked)::after {
+            content: '';
         }
 
         .checkbox-text {
