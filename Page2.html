@@ -43,6 +43,26 @@
             width: 90%;
         }
 
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fef9df;
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: rgba(254, 249, 223, 0.25);
+            border-color: rgba(254, 249, 223, 0.5);
+        }
+
         .title {
             font-size: 36px;
             font-weight: bold;
@@ -133,6 +153,7 @@
 </head>
 <body>
     <div class="form-container">
+        <button type="button" class="back-button" id="backToIntro">← Back</button>
         <h1 class="title">Tell Us About Yourself</h1>
         
         <form id="userInfoForm">
@@ -149,19 +170,18 @@
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                     <option value="other">Other</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="height">What's your height?</label>
-                <input type="number" id="height" name="height" step="0.1" min="0" placeholder="e.g., 178" required>
+                <input type="number" id="height" name="height" step="0.1" min="0" required>
                 <div class="unit-text">centimeters (cm)</div>
             </div>
 
             <div class="form-group">
                 <label for="weight">What's your weight?</label>
-                <input type="number" id="weight" name="weight" step="0.1" min="0" placeholder="e.g., 72" required>
+                <input type="number" id="weight" name="weight" step="0.1" min="0" required>
                 <div class="unit-text">kilograms (kg)</div>
             </div>
 
@@ -259,7 +279,7 @@
             }
 
             const age = Number(formData.get('age'));
-            const genderRaw = formData.get('gender') || 'prefer-not-to-say';
+            const genderRaw = formData.get('gender') || 'unspecified';
             const gender = (genderRaw === 'male' || genderRaw === 'female') ? genderRaw : 'unspecified';
             const heightCm = Number(formData.get('height'));
             const weightKg = Number(formData.get('weight'));
@@ -331,6 +351,13 @@
                 }
             }
         });
+
+        const backButton = document.getElementById('backToIntro');
+        if (backButton) {
+            backButton.addEventListener('click', () => {
+                window.location.href = 'Page1.html';
+            });
+        }
     </script>
 </body>
 </html>

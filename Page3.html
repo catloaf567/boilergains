@@ -28,6 +28,25 @@
         a:visited {
             color: inherit;
         }
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fef9df;
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: rgba(254, 249, 223, 0.25);
+            border-color: rgba(254, 249, 223, 0.5);
+        }
         .bottom-input-section {
             text-align: center;
             margin-top: 50px;
@@ -172,6 +191,7 @@
 </head>
 <body>
     <div class="main-container">
+        <button type="button" class="back-button" id="backToInfo">← Back</button>
         <h1 class="title">Your Recommended Daily Nutrition</h1>
         <p class="subtitle">Based on your profile, here are your personalized nutrition targets</p>
         
@@ -242,6 +262,13 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            const backButton = document.getElementById('backToInfo');
+            if (backButton) {
+                backButton.addEventListener('click', () => {
+                    window.location.href = 'Page2.html';
+                });
+            }
+
             const storedGoals = sessionStorage.getItem('nutritionGoals');
             if (!storedGoals) {
                 alert('Please provide your information first.');

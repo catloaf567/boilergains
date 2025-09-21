@@ -35,6 +35,26 @@
             color: inherit;
         }
 
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fef9df;
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            margin-bottom: 25px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: rgba(254, 249, 223, 0.25);
+            border-color: rgba(254, 249, 223, 0.5);
+        }
+
         .main-container {
             max-width: 1200px;
             margin: 0 auto;
@@ -116,12 +136,18 @@
         .dining-hall-btn:hover {
             background-color: rgba(254, 249, 223, 0.2);
             transform: translateY(-5px);
-            box-shadow: 0 12px 30px rgba(254, 249, 223, 0.2);
-            border-color: rgba(254, 249, 223, 0.4);
+            box-shadow: 0 12px 30px rgba(205, 29, 60, 0.45);
+            border-color: rgba(205, 29, 60, 0.7);
         }
 
         .dining-hall-btn:active {
             transform: translateY(0);
+        }
+
+        .dining-hall-btn.selected {
+            border-color: rgba(254, 249, 223, 0.6);
+            box-shadow: 0 15px 35px rgba(254, 249, 223, 0.35);
+            transform: translateY(-6px);
         }
 
         .dietary-options {
@@ -170,6 +196,12 @@
 
         .exclude-section {
             text-align: center;
+            background-color: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 20px 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            margin-top: 20px;
         }
 
         .exclude-section .dietary-label {
@@ -181,7 +213,7 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
             margin: 0 auto;
         }
 
@@ -209,6 +241,17 @@
             cursor: pointer;
         }
 
+        .checkbox-item input[type="checkbox"]:disabled {
+            accent-color: #cd1d3c;
+            opacity: 1;
+            cursor: not-allowed;
+        }
+
+        .checkbox-item.vegan-locked {
+            background-color: rgba(205, 29, 60, 0.15);
+            border-color: rgba(205, 29, 60, 0.4);
+        }
+
         .checkbox-text {
             color: #fef9df;
             font-size: 14px;
@@ -216,23 +259,40 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
 
+        .generate-button {
+            margin-top: 30px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid #fef9df;
+            color: #fef9df;
+            padding: 15px 35px;
+            font-size: 20px;
+            font-family: "Times New Roman", Times, serif;
+            font-weight: bold;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .generate-button:hover {
+            background-color: #cd1d3c;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+            border-color: #cd1d3c;
+        }
+
+        .generate-button:active {
+            transform: translateY(0);
+        }
+
+        .generate-wrapper {
+            text-align: center;
+            margin-top: 30px;
+        }
+
         .bottom-info {
             text-align: center;
             margin-top: 20px;
             padding: 20px 0;
-        }
-
-        .date-info {
-            font-size: 22px;
-            font-weight: bold;
-            color: #cd1d3c;
-            margin-bottom: 10px;
-        }
-
-        .meal-info {
-            font-size: 22px;
-            font-weight: bold;
-            color: #cd1d3c;
         }
 
         @media (max-width: 1024px) {
@@ -335,10 +395,11 @@
 </head>
 <body>
     <div class="main-container">
+        <button type="button" class="back-button" id="backToGoals">← Back</button>
         <h1 class="title">Pick Your Dining Hall</h1>
         
         <div class="dining-halls-container">
-            <button class="dining-hall-btn" onclick="selectDiningHall('windsor')">
+            <button class="dining-hall-btn" data-hall="windsor" onclick="handleHallClick('windsor', this)">
                 <div class="image-placeholder">
                     <img src="windsor.jpg">
                 </div>
@@ -346,28 +407,28 @@
                 <div class="hall-name">Windsor<br>Dining Court</div>
             </button>
             
-            <button class="dining-hall-btn" onclick="selectDiningHall('wiley')">
+            <button class="dining-hall-btn" data-hall="wiley" onclick="handleHallClick('wiley', this)">
                 <div class="image-placeholder">
                     <img src="wiley.jpg">
                 </div>
                 <div class="hall-name">Wiley<br>Dining Court</div>
             </button>
             
-            <button class="dining-hall-btn" onclick="selectDiningHall('ford')">
+            <button class="dining-hall-btn" data-hall="ford" onclick="handleHallClick('ford', this)">
                 <div class="image-placeholder">
                     <img src="ford.jpg">
                 </div>
                 <div class="hall-name">Ford<br>Dining Court</div>
             </button>
             
-            <button class="dining-hall-btn" onclick="selectDiningHall('earhart')">
+            <button class="dining-hall-btn" data-hall="earhart" onclick="handleHallClick('earhart', this)">
                 <div class="image-placeholder">
                     <img src="earhart.jpg">
                 </div>
                 <div class="hall-name">Earhart<br>Dining Court</div>
             </button>
             
-            <button class="dining-hall-btn" onclick="selectDiningHall('hillenbrand')">
+            <button class="dining-hall-btn" data-hall="hillenbrand" onclick="handleHallClick('hillenbrand', this)">
                 <div class="image-placeholder">
                     <img src="hillenbrand.jpg">
                 </div>
@@ -430,12 +491,14 @@
                 </div>
             </div>
         </div>
+
+        <div class="generate-wrapper">
+            <button id="generateButton" class="generate-button">Generate Meal Suggestions</button>
+        </div>
     </div>
 
     <div class="bottom-info">
-        <div class="date-info">Date: 22 September</div>
-        <div class="meal-info">Meal Period: Lunch</div>
-        <div id="suggestionOutput" style="margin-top: 25px; font-family: 'Times New Roman', Times, serif; color: #fef9df;"></div>
+        <div id="suggestionOutput" style="margin-top: 6px; font-family: 'Times New Roman', Times, serif; color: #fef9df;"></div>
     </div>
 
     <script>
@@ -448,6 +511,12 @@
         };
 
         const suggestionOutput = document.getElementById('suggestionOutput');
+        let selectedHall = sessionStorage.getItem('selectedHall');
+        if (selectedHall === 'null') {
+            selectedHall = null;
+        }
+        let activeHallButton = null;
+        let hallButtons = [];
         const buildApiCandidates = () => {
             const seen = new Set();
             const candidates = [];
@@ -504,7 +573,26 @@
             throw error;
         };
 
-        window.selectDiningHall = async (hall) => {
+        const setActiveHall = (hall, button, updateMessage = true) => {
+            selectedHall = hall;
+            sessionStorage.setItem('selectedHall', hall);
+            if (activeHallButton) {
+                activeHallButton.classList.remove('selected');
+            }
+            if (!button && hallButtons && hallButtons.length) {
+                button = hallButtons.find((btn) => btn.dataset && btn.dataset.hall === hall);
+            }
+            if (button) {
+                button.classList.add('selected');
+                activeHallButton = button;
+            }
+            if (updateMessage && suggestionOutput) {
+                const label = hall.charAt(0).toUpperCase() + hall.slice(1);
+                suggestionOutput.textContent = `${label} Dining Court selected. Update preferences if needed, then click "Generate Meal Suggestions".`;
+            }
+        };
+
+        const requestSuggestionForHall = async (hall) => {
             const datasetPath = hallDatasetMap[hall];
             if (!datasetPath) {
                 alert('Dataset not available for this dining hall yet.');
@@ -590,58 +678,95 @@
             }
         };
 
-        // Handle vegan dropdown change
+        window.handleHallClick = (hall, button) => {
+            setActiveHall(hall, button, true);
+        };
+
+        // Handle vegan dropdown change and page init
         document.addEventListener('DOMContentLoaded', function() {
-            const veganSelect = document.getElementById('vegan-select');
-            const excludeCheckboxes = document.querySelectorAll('input[name="exclude"]');
-
-            if (veganSelect) {
-                const toggleCheckboxState = (isVegan) => {
-                    excludeCheckboxes.forEach(checkbox => {
-                        if (isVegan) {
-                            checkbox.checked = true;
-                            checkbox.disabled = true;
-                        } else {
-                            checkbox.disabled = false;
-                        }
-                    });
-                    if (!isVegan) {
-                        excludeCheckboxes.forEach(checkbox => {
-                            checkbox.checked = false;
-                        });
-                    }
-                };
-
-                veganSelect.addEventListener('change', function() {
-                    if (this.value === 'yes') {
-                        toggleCheckboxState(true);
-                    } else {
-                        toggleCheckboxState(false);
-                    }
+            const backButton = document.getElementById('backToGoals');
+            if (backButton) {
+                backButton.addEventListener('click', () => {
+                    window.location.href = 'Page3.html';
                 });
             }
 
+            hallButtons = Array.from(document.querySelectorAll('.dining-hall-btn'));
+
             const storedSuggestion = sessionStorage.getItem('lastSuggestion');
             const contextRaw = sessionStorage.getItem('suggestionContext');
+
+            if (selectedHall) {
+                setActiveHall(selectedHall, null, !storedSuggestion);
+            } else if (suggestionOutput) {
+                suggestionOutput.textContent = 'Select a dining hall to begin.';
+            }
+
+            const generateButton = document.getElementById('generateButton');
+            if (generateButton) {
+                generateButton.addEventListener('click', () => {
+                    if (!selectedHall) {
+                        alert('Please select a dining hall before generating suggestions.');
+                        return;
+                    }
+                    requestSuggestionForHall(selectedHall);
+                });
+            }
+
+            const veganSelect = document.getElementById('vegan-select');
+            const excludeCheckboxes = document.querySelectorAll('input[name="exclude"]');
+
+            const toggleCheckboxState = (isVegan) => {
+                excludeCheckboxes.forEach(checkbox => {
+                    const wrapper = checkbox.closest('.checkbox-item');
+                    if (isVegan) {
+                        checkbox.checked = true;
+                        checkbox.disabled = true;
+                        checkbox.classList.add('vegan-locked');
+                        if (wrapper) {
+                            wrapper.classList.add('vegan-locked');
+                        }
+                    } else {
+                        checkbox.disabled = false;
+                        checkbox.classList.remove('vegan-locked');
+                        if (wrapper) {
+                            wrapper.classList.remove('vegan-locked');
+                        }
+                    }
+                });
+                if (!isVegan) {
+                    excludeCheckboxes.forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                }
+            };
+
+            if (veganSelect) {
+                veganSelect.addEventListener('change', function() {
+                    toggleCheckboxState(this.value === 'yes');
+                });
+                toggleCheckboxState(veganSelect.value === 'yes');
+            }
+
             if (storedSuggestion && contextRaw) {
                 try {
                     const context = JSON.parse(contextRaw);
+                    if (context && context.hall) {
+                        setActiveHall(context.hall, null, false);
+                    }
                     if (context && context.vegan && veganSelect) {
                         veganSelect.value = 'yes';
-                        veganSelect.dispatchEvent(new Event('change'));
-                    } else if (veganSelect) {
-                        veganSelect.dispatchEvent(new Event('change'));
-                    }
-                    if (context && Array.isArray(context.excludedItems) && context.excludedItems.length) {
-                        context.excludedItems.forEach((value) => {
-                            const checkbox = document.querySelector(`input[name="exclude"][value="${value}"]`);
-                            if (checkbox) {
-                                checkbox.checked = true;
-                                if (!context.vegan) {
-                                    checkbox.disabled = false;
+                        toggleCheckboxState(true);
+                    } else {
+                        toggleCheckboxState(false);
+                        if (context && Array.isArray(context.excludedItems) && context.excludedItems.length) {
+                            context.excludedItems.forEach((value) => {
+                                const checkbox = document.querySelector(`input[name="exclude"][value="${value}"]`);
+                                if (checkbox) {
+                                    checkbox.checked = true;
                                 }
-                            }
-                        });
+                            });
+                        }
                     }
                     if (suggestionOutput) {
                         suggestionOutput.innerHTML = 'Latest meal suggestion saved. <button id="openResults" style="margin-left: 10px; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(254, 249, 223, 0.4); background: rgba(254, 249, 223, 0.15); color: #fef9df; cursor: pointer;">View Results</button>';

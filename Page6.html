@@ -35,6 +35,26 @@
             color: inherit;
         }
 
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fef9df;
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .back-button:hover {
+            background-color: rgba(254, 249, 223, 0.25);
+            border-color: rgba(254, 249, 223, 0.5);
+        }
+
         .main-container {
             max-width: 900px;
             margin: 0 auto;
@@ -166,6 +186,7 @@
 </head>
 <body>
     <div class="main-container">
+        <button type="button" class="back-button" id="backToDining">← Back</button>
         <h1 class="title">Your Meal Suggestions</h1>
         <p class="subtitle">Handpicked options based on your goals</p>
         <div id="content">
@@ -239,6 +260,13 @@
         };
 
         document.addEventListener('DOMContentLoaded', () => {
+            const backButton = document.getElementById('backToDining');
+            if (backButton) {
+                backButton.addEventListener('click', () => {
+                    window.location.href = 'Page4.html';
+                });
+            }
+
             const suggestion = parseJSON(sessionStorage.getItem('lastSuggestion'));
             const context = parseJSON(sessionStorage.getItem('suggestionContext'));
 

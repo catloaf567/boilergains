@@ -48,7 +48,7 @@
             font-size: 48px;
             font-weight: bold;
             text-align: center;
-            margin-bottom: 60px;
+            margin-bottom: 45px;
             color: #fef9df;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
@@ -116,6 +116,26 @@
         }
 
         .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fef9df;
+            padding: 8px 14px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .back-button:hover {
+            background-color: rgba(254, 249, 223, 0.25);
+            border-color: rgba(254, 249, 223, 0.5);
+        }
+
+        .return-button {
             background-color: rgba(205, 29, 60, 0.8);
             backdrop-filter: blur(10px);
             border: 2px solid rgba(205, 29, 60, 0.6);
@@ -132,14 +152,14 @@
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
         }
 
-        .back-button:hover {
+        .return-button:hover {
             background-color: rgba(205, 29, 60, 1);
             transform: translateY(-3px);
             box-shadow: 0 12px 30px rgba(205, 29, 60, 0.4);
             border-color: rgba(205, 29, 60, 0.8);
         }
 
-        .back-button:active {
+        .return-button:active {
             transform: translateY(0);
         }
 
@@ -162,7 +182,7 @@
                 padding: 12px 15px;
             }
             
-            .back-button {
+            .return-button {
                 font-size: 16px;
                 padding: 12px 25px;
             }
@@ -185,6 +205,7 @@
 </head>
 <body>
     <div class="main-container">
+        <button type="button" class="back-button" id="backToGoals">← Back</button>
         <h1 class="title">Input Your Own Values!</h1>
         
         <div class="input-form">
@@ -219,13 +240,20 @@
             </div>
         </div>
         
-        <button class="back-button" id="backToRecommended">
-            Back to the Recommended Values
+        <button class="return-button" id="backToRecommended">
+            Save & Return to Recommended Values
         </button>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const backButton = document.getElementById('backToGoals');
+            if (backButton) {
+                backButton.addEventListener('click', () => {
+                    window.location.href = 'Page3.html';
+                });
+            }
+
             const fields = {
                 calories: document.getElementById('calories'),
                 protein: document.getElementById('protein'),
