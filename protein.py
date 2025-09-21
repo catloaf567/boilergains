@@ -5,14 +5,47 @@ import difflib
 import pandas as pd
 from typing import Dict, Any, List, Tuple, Optional
 
-# import demographics helper for calculating recommended daily macros
-try:
-    from demographics import calculate_nutrition_needs
-except Exception:
-    calculate_nutrition_needs = None
+
+EXCLUSION_TOKEN_MAP: Dict[str, List[str]] = {
+    'beef': ['beef', 'meat', 'hamburger', 'burger', 'sausage', 'pepperoni', 'peperoni'],
+    'pork': ['pork', 'ham'],
+    'chicken': ['chicken'],
+    'turkey': ['turkey'],
+    'lamb': ['lamb'],
+    'fish': ['fish'],
+    'seafood': ['seafood'],
+    'shellfish': ['shellfish', 'shrimp', 'crab', 'lobster', 'clam', 'oyster', 'scallop'],
+    'milk': ['milk', 'dairy', 'cheese', 'cream', 'butter', 'yogurt'],
+    'egg': ['egg', 'eggs'],
+}
 
 
+PROTEIN_MATCH_EPSILON = 0.5  # allow half-gram rounding wiggle when matching protein targets
 
+
+def expand_excluded_items(selected: Optional[List[str]]) -> List[str]:
+    """Return normalized tokens for exclusion selections from the UI."""
+    tokens: List[str] = []
+    if not selected:
+        return tokens
+    for item in selected:
+        key = str(item or '').strip().lower()
+        if not key:
+            continue
+        mapped = EXCLUSION_TOKEN_MAP.get(key)
+        if mapped:
+            tokens.extend(mapped)
+        else:
+            tokens.append(key)
+    # de-duplicate while preserving order
+    seen = set()
+    unique_tokens: List[str] = []
+    for token in tokens:
+        if token in seen:
+            continue
+        seen.add(token)
+        unique_tokens.append(token)
+    return unique_tokens
 
 
 def _normalize_columns(df) -> Dict[str, str]:
@@ -164,15 +197,15 @@ def _filter_candidates(foods: Dict[str, Dict[str, Any]], vegan: bool, allergen: 
 def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_goal: float,
                  vegan: bool = False, allergen: Optional[str] = None,
                  excluded_meats: Optional[List[str]] = None,
-                 tolerance: float = 0.07, max_items: int = 3, max_servings: int = 3,
-                 top_k: int = 30, protein_window: float = 5.0,
+                 tolerance: float = 0.1, max_items: int = 4, max_servings: float = 3.0,
+                 serving_step: float = 0.5, top_k: int = 10, protein_window: float = 10.0,
                  max_alternatives: int = 5) -> Optional[Dict[str, Any]]:
-    """Suggest a meal (combination of items and integer servings) that meets calorie and protein goals.
+    """Suggest a meal (combination of items and fractional servings) that meets calorie and protein goals.
 
     Strategy:
     - Filter candidates by vegan/allergen
     - Rank candidates by protein per serving (or protein/calorie)
-    - Greedy/brute-force search over small combinations of items and integer servings
+    - Greedy/brute-force search over small combinations of up to `max_items` using configurable serving steps
     - Return best match minimizing normalized distance to both goals
     """
     candidates = _filter_candidates(foods, vegan, allergen, excluded_meats=excluded_meats)
@@ -263,12 +296,25 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
     best_score = float('inf')
     solutions: List[Dict[str, Any]] = []
 
+    serving_step = max(0.1, float(serving_step))
+
     # helper: cap servings for very-high-protein items; default max 1 serving for items >20g protein
-    def max_servings_for_item(info: Dict[str, Any]) -> int:
-        base = max_servings
+    def max_servings_for_item(info: Dict[str, Any]) -> float:
+        base = float(max_servings)
         if info.get('protein', 0.0) > 20:
-            return min(base, 1)
+            return min(base, 1.0)
         return base
+
+    def serving_values_for_item(info: Dict[str, Any]) -> List[float]:
+        max_serv = max_servings_for_item(info)
+        if max_serv <= 0:
+            return []
+        steps = max(1, int(math.floor((max_serv + 1e-9) / serving_step)))
+        values = [round(serving_step * (i + 1), 2) for i in range(steps)]
+        # ensure the exact maximum is included if it is not already due to rounding
+        if values and abs(values[-1] - max_serv) > 1e-9 and max_serv - values[-1] >= 0.2 * serving_step:
+            values.append(round(max_serv, 2))
+        return values
 
     for tol in tolerances:
         low_cal = calorie_goal * (1 - tol)
@@ -280,16 +326,23 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
         for r in range(1, min(max_items, len(names)) + 1):
             for combo in itertools.combinations(names, r):
                 # determine per-item serving ranges honoring high-protein cap
-                per_item_ranges = []
+                per_item_ranges: List[List[float]] = []
+                skip_combo = False
                 for name_i in combo:
                     info = foods[name_i]
-                    m = max_servings_for_item(info)
-                    per_item_ranges.append(range(1, m + 1))
+                    options = serving_values_for_item(info)
+                    if not options:
+                        skip_combo = True
+                        break
+                    per_item_ranges.append(options)
+                if skip_combo:
+                    continue
 
                 # iterate through possible servings for each item
                 for servings in itertools.product(*per_item_ranges):
                     total_cal = 0.0
                     total_pro = 0.0
+                    total_fat = 0.0
                     total_carbs = 0.0
                     total_fat = 0.0
                     total_fiber = 0.0
@@ -298,6 +351,7 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                         info = foods[name_i]
                         total_cal += info.get('calories', 0.0) * s
                         total_pro += info.get('protein', 0.0) * s
+                        total_fat += info.get('fat', 0.0) * s
                         total_carbs += info.get('carbs', 0.0) * s
                         total_fat += info.get('fat', 0.0) * s
                         total_fiber += info.get('fiber', 0.0) * s
@@ -308,6 +362,9 @@ def suggest_meal(foods: Dict[str, Dict[str, Any]], calorie_goal: float, protein_
                         continue
 
                     if not (low_cal <= total_cal <= high_cal and low_pro <= total_pro <= high_pro):
+                        continue
+
+                    if abs(total_pro - protein_goal) > PROTEIN_MATCH_EPSILON:
                         continue
 
                     # compute a score for tie-breaking (normalized distance)
@@ -361,12 +418,16 @@ def format_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]]) -> str:
         info = foods.get(name, {})
         c = info.get('calories', 0.0) * servings
         p = info.get('protein', 0.0) * servings
-        fats = info.get('fat', 0.0) * servings
+        fat = info.get('fat', 0.0) * servings
         carbs = info.get('carbs', 0.0) * servings
         fiber = info.get('fiber', 0.0) * servings
         serving_desc = info.get('serving') or '1 serving'
-        lines.append(f"{servings} x {name} ({serving_desc}) — {c:.0f} kcal, {p:.1f} g protein, {fats:.1f} g fat, {carbs:.1f} g carbs, {fiber:.1f} g fiber")
-    lines.append(f"Total: {meal['total_calories']:.0f} kcal, {meal['total_protein']:.1f} g protein, {meal.get('total_fat', 0.0):.1f} g fat, {meal.get('total_carbs', 0.0):.1f} g carbs, {meal.get('total_fiber', 0.0):.1f} g fiber (tol {meal['tolerance_used']*100:.0f}% )")
+        lines.append(
+            f"{servings} x {name} ({serving_desc}) — {c:.0f} kcal, {p:.1f} g protein, {fat:.1f} g fat, {carbs:.1f} g carbs, {fiber:.1f} g fiber"
+        )
+    lines.append(
+        f"Total: {meal['total_calories']:.0f} kcal, {meal['total_protein']:.1f} g protein, {meal.get('total_fat', 0.0):.1f} g fat, {meal.get('total_carbs', 0.0):.1f} g carbs, {meal.get('total_fiber', 0.0):.1f} g fiber (tol {meal['tolerance_used']*100:.0f}% )"
+    )
     return '\n'.join(lines)
 
 
@@ -391,19 +452,20 @@ def pretty_print_meal(meal: Dict[str, Any], foods: Dict[str, Dict[str, Any]], ca
 
     print('\nSuggested meal:')
     print(f"{'Qty':>{qty_w}}  {'Item':<{name_w}}  {'Serving':<12}  {'kcal':>6}  {'Protein(g)':>11}  {'Fat(g)':>8}  {'Carbs(g)':>9}  {'Fiber(g)':>9}")
-    print('-' * (qty_w + name_w + 50))
+    print('-' * (qty_w + name_w + 60))
     for name, servings in items:
         info = foods.get(name, {})
         serving_desc = info.get('serving') or '1 serving'
         c = info.get('calories', 0.0) * servings
         p = info.get('protein', 0.0) * servings
+        fat = info.get('fat', 0.0) * servings
         carbs = info.get('carbs', 0.0) * servings
         fiber = info.get('fiber', 0.0) * servings
-    fats = info.get('fat', 0.0) * servings
-    print(f"{servings:>{qty_w}}  {name:<{name_w}}  {serving_desc:<12}  {c:6.0f}  {p:11.1f}  {fats:8.1f}  {carbs:9.1f}  {fiber:9.1f}")
+        print(f"{servings:>{qty_w}}  {name:<{name_w}}  {serving_desc:<12}  {c:6.0f}  {p:11.1f}  {fat:8.1f}  {carbs:9.1f}  {fiber:9.1f}")
 
     total_cal = meal.get('total_calories', 0.0)
     total_pro = meal.get('total_protein', 0.0)
+    total_fat = meal.get('total_fat', 0.0)
     total_carbs = meal.get('total_carbs', 0.0)
     total_fiber = meal.get('total_fiber', 0.0)
     total_fat = meal.get('total_fat', 0.0)
