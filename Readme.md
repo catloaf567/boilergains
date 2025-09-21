@@ -36,6 +36,7 @@ Can add allergen specific to make it accessible for students with allergies
 Have alternatives next for each dining court
 save room for dessert? - saves calories
 make it more nuanced with vegetarian options, dairy free, etc
+Incorporating more niche sections such as salad bars, make your own pizza, sizzling pasta opions
 
 
 
