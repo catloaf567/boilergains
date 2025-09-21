@@ -1,4 +1,4 @@
-# boiler-gains
+# boiler*gains*
 Eating well simplified for the everyday boilermaker.
 
 ## Inspiration
